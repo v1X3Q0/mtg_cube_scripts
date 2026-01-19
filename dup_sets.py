@@ -4,6 +4,7 @@ import tqdm
 import json
 import os
 from cardrand import cardlistcsv, write_cardlistcsv
+from balancing import index_of_card_in_list
 
 def populate_database(database_filename: str):
     with open(database_filename, "r") as database_file:
@@ -54,10 +55,24 @@ def main(args):
     card_set_list_old = []
     drl_range = range(0, len(drl))
     setcodelist_in = args.setcode
+    prevsetlist = None
+    card_set_list_old_len = 0
+
+    if (args.append == True) and (os.path.exists(args.outfile)):
+        _, prevsetlist, card_set_list_old_len = cardlistcsv(args.outfile)
+        print("going to append to our file {} with {} cards".format(args.outfile, card_set_list_old_len))
 
     # check older first
     for card_index in tqdm.tqdm(drl_range):
         card = drl[card_index]
+        if prevsetlist != None:
+            previndex = index_of_card_in_list(card, prevsetlist)
+            # if it is not none, we can still get a positive! we just need to add it to the maybeboard
+            # and then that will be that.
+            if previndex != None:
+                continue
+        # if we found a card, and its in our setlist but we are appending, we can assume that it can
+        # be put onto the maybeboard
         if card['Set'] in setcodelist_in:
             card_set_list.append(card)
             card_set_list_old.append(card)
@@ -67,9 +82,18 @@ def main(args):
         # cardlist_local, setlist_local = search_database_all_hits(database, card['name'])
         # if args.setcode in setlist_local:
         #     card_set_list.append(card)
-    print("had {}, now have {}".format(len(card_set_list_old), len(card_set_list)))
+    if card_set_list_old_len == 0:
+        card_set_list_old_len = len(card_set_list_old)
+        card_set_list_len = len(prevsetlist)
+    else:
+        card_set_list_len = len(card_set_list) + len(prevsetlist)
+    print("had {}, now have {}".format(card_set_list_old_len, card_set_list_len))
     filename = "inorganic.{}".format(os.path.basename(args.outfile))
     filename = os.path.join(os.path.dirname(args.outfile), filename)
+    if prevsetlist != None:
+        for card in card_set_list:
+            card['maybeboard'] = True
+        card_set_list = prevsetlist + card_set_list
     write_cardlistcsv(filename, card_set_list, fieldnames)
     print("wrote to file {}".format(filename))
     return
@@ -80,6 +104,7 @@ if __name__ == "__main__":
     argparser.add_argument("cardlist", help="cardlist to find dups for")
     argparser.add_argument("database", help="database in to use")
     argparser.add_argument("outfile", help="where the output should go")
+    argparser.add_argument("--append", action="store_true", help="append to outfile")
     argparser.add_argument("setcode", nargs="+", help="codes to use for a set to find")
     args = argparser.parse_args()
     main(args)

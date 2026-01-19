@@ -1,6 +1,8 @@
+*.DS_Store
 *.csv
 *.xlsx
 __pycache__
 *.json
 *.txt
 draft.*
+purchased.*

@@ -103,10 +103,20 @@ def main(args):
                 # Write the data rows
                 writer.writerows(useddict)
     elif args.bell == True:
-        # maybeboard all
+        cardlist_real = []
+        cardlist_unbell = []
+        # take all maybeboard cards out
         for card_index in range(0, len(cardlist)):
-            cardlist[card_index]['maybeboard'] = True
-        useddict = balancing_main(cube_count, cardlist)
+            if cardlist[card_index]['maybeboard'] == False:
+                cardlist_real.append(cardlist[card_index])
+            else:
+                cardlist_unbell.append(cardlist[card_index])
+        # maybeboard all
+        for card_index in range(0, len(cardlist_real)):
+            cardlist_real[card_index]['maybeboard'] = True
+        useddict = balancing_main(cube_count, cardlist_real)
+        for card in cardlist_unbell:
+            useddict.append(card)
         if useddict == -1:
             return useddict
         filename = "{}sort.{}".format(cube_count, args.cardlist_csv)

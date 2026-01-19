@@ -174,7 +174,15 @@ def balancing_main(capacity: int, cardlist: list):
 
         if len(this_color_list) < COLOR_180:
             print("ERROR: you need more primary color cards to keep up with ratio {} < {}".format(len(this_color_list), COLOR_180))
-            return -1
+            read_in = input("Continue? [y]")
+            if (read_in != '') and (read_in != None) and (read_in.lower() != 'y'):
+                return -1
+            # if force, then we don't have enough and just take all cards of this category
+            for card in this_color_list:
+                colored_card_index = index_of_card_in_list(card, cardlist)
+                cardlist[colored_card_index]['maybeboard'] = False
+                continue
+
         ratio_little = establish_ratios(SPELL_TYPES, this_color_list, COLOR_180)
         print(ratio_little)
 
@@ -206,7 +214,14 @@ def balancing_main(capacity: int, cardlist: list):
         print("ERROR: you do not have enough colorless for this draft, adjust primary color numbers {} < {}".format(
             len(uncolor_list), UNCOLOR_180
         ))
-        return -1
-    cardlist = typed_rare_pull(uncolor_list, cardlist, UNCOLOR_180)
+        read_in = input("Continue? [y]")
+        if (read_in != '') and (read_in != None) and (read_in.lower() != 'y'):
+            return -1
+        # if force, then we don't have enough and just take all cards of this category
+        for card in uncolor_list:
+            colored_card_index = index_of_card_in_list(card, cardlist)
+            cardlist[colored_card_index]['maybeboard'] = False
+    else:
+        cardlist = typed_rare_pull(uncolor_list, cardlist, UNCOLOR_180)
 
     return cardlist
