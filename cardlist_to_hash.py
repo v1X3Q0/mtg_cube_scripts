@@ -7,6 +7,7 @@ def pull_dict(cardlist: list):
     curtime = time.time()
     firsttime = curtime
     prevlength = len(cardlist)
+    firstlength = prevlength
     second_interval = 10
     print("begun dictifying {} cards! Will update you every {} seconds".format(prevlength, second_interval))
     while len(cardlist) > 0:
@@ -24,7 +25,8 @@ def pull_dict(cardlist: list):
         nexttime = time.time()
         if nexttime > (curtime + second_interval):
             curtime = nexttime
-            print("len of cardlist is at {} decrease by {}".format(len(cardlist), prevlength - len(cardlist)))
+            print("current cardlist size {}/{} decrease by {}, {} cards processed, {}'s elapsed".format(
+                len(cardlist), firstlength, prevlength - len(cardlist), firstlength - len(cardlist), curtime - firsttime))
             prevlength = len(cardlist)
     print("time elapsed: ~{}".format(curtime - firsttime))
     return carddict
