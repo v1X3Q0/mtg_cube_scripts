@@ -12,6 +12,7 @@ def pull_dict(cardlist: list):
     while len(cardlist) > 0:
         thiscardlist = []
         card = cardlist.pop(0)
+        thiscardlist.append(card)
         card_index = 0
         while card_index < len(cardlist):
             card_compare = cardlist[card_index]

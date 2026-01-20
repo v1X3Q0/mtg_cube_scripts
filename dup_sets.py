@@ -10,10 +10,36 @@ def populate_database(database_filename: str):
     with open(database_filename, "r") as database_file:
         database = json.load(database_file)
         return database
-    
+
+def get_real_cardname(database: dict, cardname: str):
+    if cardname in database.keys():
+        return cardname
+    else:
+        for cardkey in database.keys():
+            if "{} // ".format(cardname) in cardkey:
+                return cardkey
+        # we haven't returned yet
+        for cardlist in database.keys():
+            for eachcard in database[cardlist]:
+                if ("flavor_name" in eachcard.keys()) and (eachcard["flavor_name"] == cardname):
+                    return cardkey
+                elif ("printed_name" in eachcard.keys()) and (eachcard["printed_name"] == cardname):
+                    return cardkey
+        else:
+            print(cardname)
+            exit()
+    return
+
 def search_database(database:list, cardname:str, setnamelist_in:list):
     for card in database:
         if ((card['name'] == cardname) or ("{} // ".format(cardname) in card['name'])) and (card['set'] in setnamelist_in):
+            return card
+    return None
+
+def search_dictified_database(database: dict, cardname:str, setnamelist_in:list):
+    carlist_local = database[cardname]
+    for card in carlist_local:
+        if (card['set'] in setnamelist_in):
             return card
     return None
 
@@ -77,8 +103,13 @@ def main(args):
             card_set_list.append(card)
             card_set_list_old.append(card)
             continue
-        if search_database(database, card['name'], setcodelist_in) != None:
-            card_set_list.append(card)
+        if args.dictified == True:
+            cardname_temp = get_real_cardname(database, card['name'])
+            if search_dictified_database(database, cardname_temp, setcodelist_in) != None:
+                card_set_list.append(card)
+        else:
+            if search_database(database, card['name'], setcodelist_in) != None:
+                card_set_list.append(card)
         # cardlist_local, setlist_local = search_database_all_hits(database, card['name'])
         # if args.setcode in setlist_local:
         #     card_set_list.append(card)
@@ -110,6 +141,7 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser("dup_sets")
     argparser.add_argument("cardlist", help="cardlist to find dups for")
     argparser.add_argument("database", help="database in to use")
+    argparser.add_argument("--dictified", action="store_true", help="database has been dictified")
     argparser.add_argument("--force_main", action="store_true", help="force cards to main board")
     argparser.add_argument("--outfile", help="where the output should go")
     argparser.add_argument("--append", action="store_true", help="append to outfile")
