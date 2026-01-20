@@ -74,7 +74,6 @@ def establish_ratios(spell_type_list: list, this_color_list: list, COLOR_180: in
     # if this is the case, we need to just return thie stuff, since
     # we just don't have enough cards. Ideally, we will be pulling from
     # the maybe pile
-    print(count)
     while count < COLOR_180:
         # print("{} < {}".format(count, COLOR_180))
         # calculate all ratios
@@ -257,8 +256,7 @@ def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list):
     print("retrieving lands")
     land_size_real = len(land_list)
     if len(land_list) > LAND_CAPACITY:
-        land_size_real = LAND_CAPACITY
-        cardlist = typed_rare_pull(land_list, cardlist, land_size_real)
+        cardlist = typed_rare_pull(land_list, cardlist, LAND_CAPACITY)
     # less than, we gotta get some lands from teh maybe board
     elif len(land_list) < LAND_CAPACITY:
         print("ERROR: you do not have enough lands for this draft, adjust land numbers {} < {}".format(
@@ -277,10 +275,10 @@ def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list):
         for card in land_list:
             colored_card_index = index_of_card_in_list(card, cardlist)
             cardlist[colored_card_index]['maybeboard'] = False
-        # we are gonna set this to be the capacity, if its less we can comment it out
-        # or overwrite, or just add in more lands ourselves to take the burden off the
-        # uncolor
-        land_size_real = LAND_CAPACITY
+    # we are gonna set this to be the capacity, if its less we can comment it out
+    # or overwrite, or just add in more lands ourselves to take the burden off the
+    # uncolor
+    land_size_real = LAND_CAPACITY
 
 
     # get multicolors and colorless cards

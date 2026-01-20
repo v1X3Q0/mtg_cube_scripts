@@ -107,7 +107,8 @@ def main(args):
         setm = set_main(setm)
 
         main_setname = re.match(SETNAME_REGEX, os.path.basename(args.setm))
-        main_setname = main_setname.groups()[0]
+        if main_setname != None:
+            main_setname = main_setname.groups()[0]
         cardnamelist, cardlistnet = update_cardnamelist(setm, cardnamelist, cardlistnet)
 
     for maybedir in args.maybe:

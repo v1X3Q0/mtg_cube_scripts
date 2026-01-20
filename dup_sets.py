@@ -84,18 +84,25 @@ def main(args):
         #     card_set_list.append(card)
     if card_set_list_old_len == 0:
         card_set_list_old_len = len(card_set_list_old)
-        card_set_list_len = len(prevsetlist)
+        card_set_list_len = len(card_set_list)
     else:
         card_set_list_len = len(card_set_list) + len(prevsetlist)
     print("had {}, now have {}".format(card_set_list_old_len, card_set_list_len))
-    filename = "inorganic.{}".format(os.path.basename(args.outfile))
-    filename = os.path.join(os.path.dirname(args.outfile), filename)
-    if prevsetlist != None:
+    if args.outfile != None:
+        filename = "inorganic.{}".format(os.path.basename(args.outfile))
+        filename = os.path.join(os.path.dirname(args.outfile), filename)
+        if prevsetlist != None:
+            for card in card_set_list:
+                if args.force_main == True:
+                    card['maybeboard'] = False
+                else:
+                    card['maybeboard'] = True
+            card_set_list = prevsetlist + card_set_list
+        write_cardlistcsv(filename, card_set_list, fieldnames)
+        print("wrote to file {}".format(filename))
+    else:
         for card in card_set_list:
-            card['maybeboard'] = True
-        card_set_list = prevsetlist + card_set_list
-    write_cardlistcsv(filename, card_set_list, fieldnames)
-    print("wrote to file {}".format(filename))
+            print(card['name'])
     return
 
 if __name__ == "__main__":
@@ -103,7 +110,8 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser("dup_sets")
     argparser.add_argument("cardlist", help="cardlist to find dups for")
     argparser.add_argument("database", help="database in to use")
-    argparser.add_argument("outfile", help="where the output should go")
+    argparser.add_argument("--force_main", action="store_true", help="force cards to main board")
+    argparser.add_argument("--outfile", help="where the output should go")
     argparser.add_argument("--append", action="store_true", help="append to outfile")
     argparser.add_argument("setcode", nargs="+", help="codes to use for a set to find")
     args = argparser.parse_args()
