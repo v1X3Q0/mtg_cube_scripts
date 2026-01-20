@@ -107,21 +107,22 @@ def main(args):
         cardlist_unbell = []
         # take all maybeboard cards out
         for card_index in range(0, len(cardlist)):
-            if cardlist[card_index]['maybeboard'] == False:
+            if cardlist[card_index]['maybeboard'] == "False":
                 cardlist_real.append(cardlist[card_index])
             else:
                 cardlist_unbell.append(cardlist[card_index])
         # maybeboard all
         for card_index in range(0, len(cardlist_real)):
             cardlist_real[card_index]['maybeboard'] = True
-        useddict = balancing_main(cube_count, cardlist_real)
-        for card in cardlist_unbell:
-            useddict.append(card)
+        print("beginning with {} cards, will add {} later".format(len(cardlist_real), len(cardlist_unbell)))
+        useddict, cardlist_unbell = balancing_main(cube_count, cardlist_real, cardlist_unbell)
         if useddict == -1:
             return useddict
+        useddict = useddict + cardlist_unbell
         filename = "{}sort.{}".format(cube_count, args.cardlist_csv)
 
         write_cardlistcsv(filename, useddict, fieldnames)
+        print("wrote {}".format(filename))
     return
 
 if __name__ == "__main__":
