@@ -205,13 +205,17 @@ def typed_rare_pull(this_typed_color_list: list, cardlist: list, ratio_type_cap:
             # color_dict.pop(temp_typelist[rand_card])
     return cardlist
 
-def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list):
+def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list, owcolor: int):
     cardlist_scrython=[]
     color_dict = {'W':[], 'B':[], 'U':[], 'G':[], 'R':[]}
     uncolor_list = []
     land_list = []
     CAPACITY_180=capacity
-    COLOR_180=BALANCING_MAP[capacity]["COLOR"]
+    if owcolor == None:
+        COLOR_180=BALANCING_MAP[capacity]["COLOR"]
+    else:
+        COLOR_180 = owcolor
+
     LAND_CAPACITY=BALANCING_MAP[capacity]["LANDS"]
 
     for card in cardlist:
@@ -234,11 +238,12 @@ def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list):
         ratio_little, ratio_diff = establish_ratios(SPELL_TYPES, this_color_list, COLOR_180)
         print(ratio_little)
 
-        if len(this_color_list) > COLOR_180:
+        this_color_list_len = len(this_color_list)
+        if this_color_list_len > COLOR_180:
             # now we have all our ratios for the card types
             #  type current can be something crazy, in which its just OTHER
             cardlist = typed_pull_ratios(ratio_little, color, this_color_list, cardlist)
-        elif len(this_color_list) < COLOR_180:
+        elif this_color_list_len < COLOR_180:
             print("ERROR: you need more primary color cards to keep up with ratio {} < {}".format(len(this_color_list), COLOR_180))
             read_in = input("Continue? [y]")
             if (read_in != '') and (read_in != None) and (read_in.lower() != 'y'):
@@ -248,7 +253,7 @@ def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list):
                 print("ERROR: not enough maybeboard cards for the cube")
             else:
                 cardlist_maybe = cardlist_maybe_tmp
-        if len(this_color_list) <= COLOR_180:
+        if this_color_list_len <= COLOR_180:
             for card in this_color_list:
                 colored_card_index = index_of_card_in_list(card, cardlist)
                 cardlist[colored_card_index]['maybeboard'] = False
@@ -285,9 +290,10 @@ def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list):
     # get multicolors and colorless cards
     print("retrieving multicolor and colorless")
     UNCOLOR_180 = CAPACITY_180 - (COLOR_180 * 5) - land_size_real
-    if len(uncolor_list) > UNCOLOR_180:
+    this_color_list_len = len(uncolor_list)
+    if this_color_list_len > UNCOLOR_180:
         cardlist = typed_rare_pull(uncolor_list, cardlist, UNCOLOR_180)
-    elif len(uncolor_list) < UNCOLOR_180:
+    elif this_color_list_len < UNCOLOR_180:
         print("ERROR: you do not have enough colorless for this draft, adjust primary color numbers {} < {}".format(
             len(uncolor_list), UNCOLOR_180
         ))
@@ -300,7 +306,7 @@ def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list):
             print("ERROR: few uncolor short")
         else:
             cardlist_maybe = cardlist_maybe_tmp
-    if len(uncolor_list) <= UNCOLOR_180:
+    if this_color_list_len <= UNCOLOR_180:
         for card in uncolor_list:
             colored_card_index = index_of_card_in_list(card, cardlist)
             cardlist[colored_card_index]['maybeboard'] = False

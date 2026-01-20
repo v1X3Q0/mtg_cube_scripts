@@ -115,7 +115,7 @@ def main(args):
         for card_index in range(0, len(cardlist_real)):
             cardlist_real[card_index]['maybeboard'] = True
         print("beginning with {} cards, will add {} later".format(len(cardlist_real), len(cardlist_unbell)))
-        useddict, cardlist_unbell = balancing_main(cube_count, cardlist_real, cardlist_unbell)
+        useddict, cardlist_unbell = balancing_main(cube_count, cardlist_real, cardlist_unbell, args.owcolor)
         if useddict == -1:
             return useddict
         useddict = useddict + cardlist_unbell
@@ -131,5 +131,6 @@ if __name__ == "__main__":
     argparser.add_argument("--cardlist_csv", help="csv cardlist, could be a cubetutor list")
     argparser.add_argument("--bell", action="store_true", help="try and get a good curve")
     argparser.add_argument("--cube_count", type=int, default=180, help="total cards to use for draft cube")
+    argparser.add_argument("--owcolor", type=int, help="overwrite the color base count")
     args = argparser.parse_args()
     main(args)
