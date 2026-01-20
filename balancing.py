@@ -61,7 +61,7 @@ def establish_ratios(spell_type_list: list, this_color_list: list, COLOR_180: in
         ratio_float = etablish_ratio[type_current] / len(this_color_list)
         ratio_out = int(ratio_float * COLOR_180)
         if (ratio_out == 0) and (etablish_ratio[type_current] != 0):
-            ratio_out = ratio_out
+            ratio_out = 1
         ratio_little[type_current] = ratio_out
 
     # verify that you have the color_180
@@ -74,6 +74,7 @@ def establish_ratios(spell_type_list: list, this_color_list: list, COLOR_180: in
     # if this is the case, we need to just return thie stuff, since
     # we just don't have enough cards. Ideally, we will be pulling from
     # the maybe pile
+    print(count)
     while count < COLOR_180:
         # print("{} < {}".format(count, COLOR_180))
         # calculate all ratios
@@ -88,6 +89,8 @@ def establish_ratios(spell_type_list: list, this_color_list: list, COLOR_180: in
         ratio_temp_max = sorted(ratio_temp.items())
         ratio_temp_max.reverse()
         for ratio_iter in ratio_temp_max:
+            if ratio_little[ratio_iter[0]] == etablish_ratio[ratio_iter[0]]:
+                continue
             ratio_little[ratio_iter[0]] += 1
             count += 1
             if count == COLOR_180:
