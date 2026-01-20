@@ -13,7 +13,7 @@ def populate_database(database_filename: str):
     
 def search_database(database:list, cardname:str, setnamelist_in:list):
     for card in database:
-        if (card['name'] == cardname) and (card['set'] in setnamelist_in):
+        if ((card['name'] == cardname) or ("{} // ".format(cardname) in card['name'])) and (card['set'] in setnamelist_in):
             return card
     return None
 

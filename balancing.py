@@ -149,7 +149,8 @@ def typed_rare_pull(this_typed_color_list: list, cardlist: list, ratio_type_cap:
         while card_index < len(this_typed_color_list):
             card = this_typed_color_list[card_index]
             if (card['Rarity'] == 'rare') or (card['Rarity'] == 'mythic'):
-                cardlist[index_of_card_in_list(card, cardlist)]['maybeboard'] = False
+                card_index_net = index_of_card_in_list(card, cardlist)
+                cardlist[card_index_net]['maybeboard'] = False
                 this_typed_color_list.pop(card_index)
                 ratio_type_cap -= 1
                 continue
@@ -178,7 +179,8 @@ def typed_rare_pull(this_typed_color_list: list, cardlist: list, ratio_type_cap:
                 else:
                     # print(ratio_type_cap, len(this_typed_color_list))
                     rand_card_index = random.randint(0, len(this_typed_color_list) - 1)
-                cardlist[index_of_card_in_list(this_typed_color_list[rand_card_index], cardlist)]['maybeboard'] = False
+                card_index_net = index_of_card_in_list(this_typed_color_list[rand_card_index], cardlist)
+                cardlist[card_index_net]['maybeboard'] = False
                 # we need to remove all instances of this card
                 rand_card = this_typed_color_list[rand_card_index]
                 while index_of_card_in_list(rand_card, this_typed_color_list) != None:
@@ -253,8 +255,8 @@ def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list):
 
     # return
     # get lands
-    print("retrieving lands")
     land_size_real = len(land_list)
+    print("retrieving {} lands".format(land_size_real))
     if len(land_list) > LAND_CAPACITY:
         cardlist = typed_rare_pull(land_list, cardlist, LAND_CAPACITY)
     # less than, we gotta get some lands from teh maybe board
@@ -271,7 +273,7 @@ def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list):
         else:
             cardlist_maybe = cardlist_maybe_tmp
     # force in the rest of the lands
-    if len(land_list) <= LAND_CAPACITY:
+    if land_size_real <= LAND_CAPACITY:
         for card in land_list:
             colored_card_index = index_of_card_in_list(card, cardlist)
             cardlist[colored_card_index]['maybeboard'] = False
@@ -279,7 +281,6 @@ def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list):
     # or overwrite, or just add in more lands ourselves to take the burden off the
     # uncolor
     land_size_real = LAND_CAPACITY
-
 
     # get multicolors and colorless cards
     print("retrieving multicolor and colorless")
