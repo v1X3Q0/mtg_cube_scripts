@@ -134,6 +134,7 @@ def main(args):
     else:
         for card in card_set_list:
             print(card['name'])
+        print("Once again, had {}, now have {}".format(card_set_list_old_len, card_set_list_len))
     return
 
 if __name__ == "__main__":

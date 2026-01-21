@@ -40,7 +40,7 @@ def establish_ratios(spell_type_list: list, this_color_list: list, COLOR_180: in
 
     ratio_little = etablish_ratio.copy()
 
-    # calculate ration to maintain it
+    # calculate ratio to maintain it
     for card in this_color_list:
         type_current = parse_type(card["Type"])
         if type_current in etablish_ratio.keys():
@@ -48,9 +48,9 @@ def establish_ratios(spell_type_list: list, this_color_list: list, COLOR_180: in
         else:
             etablish_ratio["OTHER"] += 1
 
-    ratio_little_tmp = sorted(ratio_little.items())
-    ratio_little = dict(ratio_little_tmp)
-    ratio_little_tmp = list(ratio_little.keys())
+    # we have the exact number
+    if len(this_color_list) == COLOR_180:
+        return etablish_ratio, ratio_little
 
     # get the rounded stuff for each type, we are solving for ratio_out, and
     # saving it in ratio_little
@@ -69,44 +69,76 @@ def establish_ratios(spell_type_list: list, this_color_list: list, COLOR_180: in
     for type_current in ratio_little.keys():
         count += ratio_little[type_current]
 
-    #  if we are less than 180, i want to add to the most favored
-    # count is what we have, color_180 is the goal
-    # if this is the case, we need to just return thie stuff, since
-    # we just don't have enough cards. Ideally, we will be pulling from
-    # the maybe pile
+    # while count != COLOR_180:
+    #     #  if we are less than 180, i want to add to the most favored
+    #     # count is what we have, color_180 is the goal
+    #     # if this is the case, we need to just return thie stuff, since
+    #     # we just don't have enough cards. Ideally, we will be pulling from
+    #     # the maybe pile
+    #     while count < COLOR_180:
+    #         # print("{} < {}".format(count, COLOR_180))
+    #         # calculate all ratios
+    #         # ratio_little is the goal, establish_ratio is what we have
+    #         ratio_temp = {}
+    #         for type_current in etablish_ratio.keys():
+    #             ratio_float = etablish_ratio[type_current] / len(this_color_list)
+    #             ratio_out_float = ratio_float * COLOR_180
+    #             ratio_out_delta = ratio_out_float - (int(ratio_out_float) * 1.0)
+    #             ratio_temp[type_current] = ratio_out_delta
+            
+    #         ratio_temp_max = sorted(ratio_temp.items())
+    #         ratio_temp_max.reverse()
+    #         count_initial = count
+    #         for ratio_iter in ratio_temp_max:
+    #             if ratio_little[ratio_iter[0]] == etablish_ratio[ratio_iter[0]]:
+    #                 continue
+    #             ratio_little[ratio_iter[0]] += 1
+    #             count += 1
+    #             print("adding a {}".format(ratio_iter[0]))
+    #             if count == COLOR_180:
+    #                 break
+    #         # weird edgecase, our ratios are close enough
+    #         else:
+    #             if count_initial == count:
+    #                 ratio_little[ratio_temp_max[0][0]] += 1
+    #                 print("adding a {}".format(ratio_temp_max[0][0]))
+    #         if len(this_color_list) < COLOR_180:
+    #             for type_current in etablish_ratio.keys():
+    #                 ratio_diff[type_current] = ratio_little[type_current] - etablish_ratio[type_current]
+    # add from the largest to the smallest
     while count < COLOR_180:
-        # print("{} < {}".format(count, COLOR_180))
-        # calculate all ratios
-        # ratio_little is the goal, establish_ratio is what we have
-        ratio_temp = {}
-        for type_current in etablish_ratio.keys():
-            ratio_float = etablish_ratio[type_current] / len(this_color_list)
-            ratio_out_float = ratio_float * COLOR_180
-            ratio_out_delta = ratio_out_float - (int(ratio_out_float) * 1.0)
-            ratio_temp[type_current] = ratio_out_delta
-                    
-        ratio_temp_max = sorted(ratio_temp.items())
-        ratio_temp_max.reverse()
-        for ratio_iter in ratio_temp_max:
-            if ratio_little[ratio_iter[0]] == etablish_ratio[ratio_iter[0]]:
-                continue
-            ratio_little[ratio_iter[0]] += 1
+        ratio_little_tmp = sorted(ratio_little.items())
+        ratio_little_tmp.reverse()
+
+        for keypair in ratio_little_tmp:
+            thiskey = keypair[0]
+            ratio_little[thiskey] += 1
             count += 1
             if count == COLOR_180:
                 break
-        if len(this_color_list) < COLOR_180:
-            for type_current in etablish_ratio.keys():
-                ratio_diff[type_current] = ratio_little[type_current] - etablish_ratio[type_current]
-        
-    # if we are greater than our ratio, i want to remove from the least favored
-    ratio_little_tmp.reverse()
+
+    # subtract from the largest to the smallest
     while count > COLOR_180:
+        ratio_little_tmp = sorted(ratio_little.items())
+
+        # if we are greater than our ratio, i want to remove from the least favored
+        ratio_little_tmp.reverse()
         for key in ratio_little_tmp:
+            ratio_delt = ratio_little[key] / COLOR_180
+            # if its something that is too small already, we will continue and just
+            # knock out the big fish
+            if ratio_delt < .1:
+                break
             ratio_little[key] -= 1
             count -= 1
+            print("removing a {}".format(key))
             if count == COLOR_180:
                 break
     
+    for type_current in etablish_ratio.keys():
+        if etablish_ratio[type_current] < ratio_little[type_current]:
+            ratio_diff[type_current] = ratio_little[type_current] - etablish_ratio[type_current]
+                
     print(etablish_ratio)
     return ratio_little, ratio_diff
 
@@ -234,17 +266,12 @@ def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list, owcolor:
         # if color != 'B':
         #     continue
         this_color_list = color_dict[color]
-
-        ratio_little, ratio_diff = establish_ratios(SPELL_TYPES, this_color_list, COLOR_180)
-        print(ratio_little)
+        print(color, len(this_color_list))
 
         this_color_list_len = len(this_color_list)
-        if this_color_list_len > COLOR_180:
-            # now we have all our ratios for the card types
-            #  type current can be something crazy, in which its just OTHER
-            cardlist = typed_pull_ratios(ratio_little, color, this_color_list, cardlist)
-        elif this_color_list_len < COLOR_180:
-            print("ERROR: you need more primary color cards to keep up with ratio {} < {}".format(len(this_color_list), COLOR_180))
+        ratio_little, ratio_diff = establish_ratios(SPELL_TYPES, this_color_list, COLOR_180)
+        if ratio_diff != {}:
+            print("ERROR: you need {} to keep up with this ratio {} < {}".format(ratio_diff, len(this_color_list), COLOR_180))
             read_in = input("Continue? [y]")
             if (read_in != '') and (read_in != None) and (read_in.lower() != 'y'):
                 return -1, -1
@@ -253,6 +280,11 @@ def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list, owcolor:
                 print("ERROR: not enough maybeboard cards for the cube")
             else:
                 cardlist_maybe = cardlist_maybe_tmp
+        else:
+            if this_color_list_len > COLOR_180:
+                # now we have all our ratios for the card types
+                #  type current can be something crazy, in which its just OTHER
+                cardlist = typed_pull_ratios(ratio_little, color, this_color_list, cardlist)
         if this_color_list_len <= COLOR_180:
             for card in this_color_list:
                 colored_card_index = index_of_card_in_list(card, cardlist)
