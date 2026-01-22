@@ -50,8 +50,10 @@ def establish_ratios(spell_type_list: list, this_color_list: list, COLOR_180: in
 
     # we have the exact number
     if len(this_color_list) == COLOR_180:
-        return etablish_ratio, ratio_little
+        return etablish_ratio, ratio_diff
 
+    ratio_little_f = {}
+    ratio_little_fd = {}
     # get the rounded stuff for each type, we are solving for ratio_out, and
     # saving it in ratio_little
     #    number_of_this_type              ratio_out
@@ -59,87 +61,38 @@ def establish_ratios(spell_type_list: list, this_color_list: list, COLOR_180: in
     #    total of this color       23 (180 color draft size)
     for type_current in etablish_ratio.keys():
         ratio_float = etablish_ratio[type_current] / len(this_color_list)
-        ratio_out = int(ratio_float * COLOR_180)
-        if (ratio_out == 0) and (etablish_ratio[type_current] != 0):
-            ratio_out = 1
+        ratio_float = ratio_float * COLOR_180
+        ratio_out = int(ratio_float)
+        # if (ratio_out == 0) and (etablish_ratio[type_current] != 0):
+        #     print(type_current, etablish_ratio[type_current])
+        #     ratio_out = 1
+        ratio_little_f[type_current] = ratio_float
         ratio_little[type_current] = ratio_out
-
-    # verify that you have the color_180
+        ratio_fdelta = ratio_float - (1.0 * ratio_out)
+        ratio_little_fd[type_current] = ratio_fdelta
+    
     count = 0
     for type_current in ratio_little.keys():
         count += ratio_little[type_current]
 
-    # while count != COLOR_180:
-    #     #  if we are less than 180, i want to add to the most favored
-    #     # count is what we have, color_180 is the goal
-    #     # if this is the case, we need to just return thie stuff, since
-    #     # we just don't have enough cards. Ideally, we will be pulling from
-    #     # the maybe pile
-    #     while count < COLOR_180:
-    #         # print("{} < {}".format(count, COLOR_180))
-    #         # calculate all ratios
-    #         # ratio_little is the goal, establish_ratio is what we have
-    #         ratio_temp = {}
-    #         for type_current in etablish_ratio.keys():
-    #             ratio_float = etablish_ratio[type_current] / len(this_color_list)
-    #             ratio_out_float = ratio_float * COLOR_180
-    #             ratio_out_delta = ratio_out_float - (int(ratio_out_float) * 1.0)
-    #             ratio_temp[type_current] = ratio_out_delta
-            
-    #         ratio_temp_max = sorted(ratio_temp.items())
-    #         ratio_temp_max.reverse()
-    #         count_initial = count
-    #         for ratio_iter in ratio_temp_max:
-    #             if ratio_little[ratio_iter[0]] == etablish_ratio[ratio_iter[0]]:
-    #                 continue
-    #             ratio_little[ratio_iter[0]] += 1
-    #             count += 1
-    #             print("adding a {}".format(ratio_iter[0]))
-    #             if count == COLOR_180:
-    #                 break
-    #         # weird edgecase, our ratios are close enough
-    #         else:
-    #             if count_initial == count:
-    #                 ratio_little[ratio_temp_max[0][0]] += 1
-    #                 print("adding a {}".format(ratio_temp_max[0][0]))
-    #         if len(this_color_list) < COLOR_180:
-    #             for type_current in etablish_ratio.keys():
-    #                 ratio_diff[type_current] = ratio_little[type_current] - etablish_ratio[type_current]
-    # add from the largest to the smallest
-    while count < COLOR_180:
-        ratio_little_tmp = sorted(ratio_little.items())
-        ratio_little_tmp.reverse()
 
-        for keypair in ratio_little_tmp:
-            thiskey = keypair[0]
-            ratio_little[thiskey] += 1
+    while count != COLOR_180:
+        ratio_little_fd_sorted = {k: v for k, v in sorted(ratio_little_fd.items(), key=lambda item: item[1])}
+        # print(ratio_little_fd_sorted)
+        for type_current in reversed(ratio_little_fd_sorted):
+            ratio_little[type_current] += 1
+            # print("incrementing {}, {}".format(type_current, ratio_little_fd[type_current]))
+            ratio_little_fd[type_current] = 0
             count += 1
             if count == COLOR_180:
                 break
 
-    # subtract from the largest to the smallest
-    while count > COLOR_180:
-        ratio_little_tmp = sorted(ratio_little.items())
-
-        # if we are greater than our ratio, i want to remove from the least favored
-        ratio_little_tmp.reverse()
-        for key in ratio_little_tmp:
-            ratio_delt = ratio_little[key] / COLOR_180
-            # if its something that is too small already, we will continue and just
-            # knock out the big fish
-            if ratio_delt < .1:
-                break
-            ratio_little[key] -= 1
-            count -= 1
-            print("removing a {}".format(key))
-            if count == COLOR_180:
-                break
-    
     for type_current in etablish_ratio.keys():
         if etablish_ratio[type_current] < ratio_little[type_current]:
             ratio_diff[type_current] = ratio_little[type_current] - etablish_ratio[type_current]
                 
     print(etablish_ratio)
+    print(ratio_little)
     return ratio_little, ratio_diff
 
 def index_of_card_in_list(card_in: dict, cardlist: list):
