@@ -19,12 +19,12 @@ def get_real_cardname(database: dict, cardname: str):
             if "{} // ".format(cardname) in cardkey:
                 return cardkey
         # we haven't returned yet
-        for cardlist in database.keys():
-            for eachcard in database[cardlist]:
+        for cardname_iter in database.keys():
+            for eachcard in database[cardname_iter]:
                 if ("flavor_name" in eachcard.keys()) and (eachcard["flavor_name"] == cardname):
-                    return cardkey
+                    return cardname_iter
                 elif ("printed_name" in eachcard.keys()) and (eachcard["printed_name"] == cardname):
-                    return cardkey
+                    return cardname_iter
         else:
             print(cardname)
             exit()
