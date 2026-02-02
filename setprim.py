@@ -134,7 +134,6 @@ def main(args):
 
     
     if args.typelist != None:
-        
         typelist = str(args.typelist.replace('\"', '')).split(',')
         for mtgtype in typelist:
             mtgtype = mtgtype.lower()
@@ -146,14 +145,16 @@ def main(args):
 
     setlist.sort()
     print("maineboard \"{}\": have sets {} on the maybeboard".format(main_setname, setlist))
-
-    write_cardlistcsv(cardlistnet, args.outfile, fieldnames)
+    if args.outfile != None:
+        write_cardlistcsv(cardlistnet, args.outfile, fieldnames)
+    else:
+        print("have {} cards".format(len(cardlistnet)))
     return
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser("cardrand")
-    argparser.add_argument("outfile", help="file to write the set to")
-    argparser.add_argument("--typelist", help="comma separated list of types to unmaybe")
+    argparser.add_argument("--outfile", help="file to write the set to")
+    argparser.add_argument("--typelist", help="comma separated list of types to unmaybe, comma separated like \"vampire,dwarf\"")
     argparser.add_argument("--setm", help="just take a bunch of csv, and make this your main set")
     argparser.add_argument("--purchased", action="store_true", help="will look for purchased cards," \
     " those will go on the maybe and unpurchased will go on main")

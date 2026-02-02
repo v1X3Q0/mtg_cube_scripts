@@ -64,8 +64,7 @@ def main(args):
         useddict = cardlist.copy()
     cube_count = args.cube_count
     if cube_count > totalcards:
-        print("not enough cards in this set! Have {} need {}".format(totalcards, cube_count))
-        return -1
+        print("WARNING: not enough cards in this set! Have {} need {}".format(totalcards, cube_count))
     if args.bell == False:
         unique_random_integers = random.sample(range(0, totalcards), cube_count)
         if args.cardlist_counts != None:
@@ -115,7 +114,7 @@ def main(args):
         for card_index in range(0, len(cardlist_real)):
             cardlist_real[card_index]['maybeboard'] = True
         print("beginning with {} cards, will add {} later".format(len(cardlist_real), len(cardlist_unbell)))
-        useddict, cardlist_unbell = balancing_main(cube_count, cardlist_real, cardlist_unbell, args.owcolor)
+        useddict, cardlist_unbell = balancing_main(cube_count, cardlist_real, cardlist_unbell, args.owcolor, args.owland)
         if useddict == -1:
             return useddict
         useddict = useddict + cardlist_unbell
@@ -123,6 +122,19 @@ def main(args):
 
         write_cardlistcsv(filename, useddict, fieldnames)
         print("wrote {}".format(filename))
+    if args.rand_color_print:
+        mainboardcards = []
+        for card in useddict:
+            if card['maybeboard'] == False:
+                mainboardcards.append(card)
+        colordict = {"W": 0, "U": 0, "G": 0, "R": 0, "B": 0}
+        for card in mainboardcards:
+            typesplit = card['Type'].split(' ')
+            if (len(card['Color']) >= 1) and ('Land' not in typesplit):
+                if (card['Rarity'] == 'mythic') or (card['Rarity'] == 'rare'):
+                    for eachcolor in card['Color']:
+                        colordict[eachcolor] += 1
+        print("rarity color dict: {}".format(colordict))
     return
 
 if __name__ == "__main__":
@@ -132,5 +144,7 @@ if __name__ == "__main__":
     argparser.add_argument("--bell", action="store_true", help="try and get a good curve")
     argparser.add_argument("--cube_count", type=int, default=180, help="total cards to use for draft cube")
     argparser.add_argument("--owcolor", type=int, help="overwrite the color base count")
+    argparser.add_argument("--owland", type=int, help="overwrite the land base count")
+    argparser.add_argument("--rand_color_print", action='store_true', help='display the random color balance')
     args = argparser.parse_args()
     main(args)

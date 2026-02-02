@@ -190,7 +190,7 @@ def typed_rare_pull(this_typed_color_list: list, cardlist: list, ratio_type_cap:
             # color_dict.pop(temp_typelist[rand_card])
     return cardlist
 
-def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list, owcolor: int):
+def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list, owcolor: int, owland: int):
     cardlist_scrython=[]
     color_dict = {'W':[], 'B':[], 'U':[], 'G':[], 'R':[]}
     uncolor_list = []
@@ -201,7 +201,10 @@ def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list, owcolor:
     else:
         COLOR_180 = owcolor
 
-    LAND_CAPACITY=BALANCING_MAP[capacity]["LANDS"]
+    if owland == None:
+        LAND_CAPACITY=BALANCING_MAP[capacity]["LANDS"]
+    else:
+        LAND_CAPACITY=owland
 
     for card in cardlist:
         type_spacesplit = card['Type'].split(' ')
