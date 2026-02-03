@@ -16,7 +16,7 @@ def get_real_cardname(database: dict, cardname: str):
         return cardname
     else:
         for cardkey in database.keys():
-            if "{} // ".format(cardname) in cardkey:
+            if ("{} // ".format(cardname) in cardkey) and (cardkey != "{} // {}".format(cardname, cardname)):
                 return cardkey
         # we haven't returned yet
         for cardname_iter in database.keys():
