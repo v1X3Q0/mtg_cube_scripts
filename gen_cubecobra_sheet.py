@@ -62,6 +62,9 @@ LABEL_TEXT_TYPE = """
     color: black;
     padding: 8px;
     font-size: small;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 """
 
@@ -220,9 +223,10 @@ class trading_card_game_t:
             if card_type not in card_types_dict[column_key].keys():
                 card_types_dict[column_key][card_type] = []
             card_types_dict[column_key][card_type].append(card)
-        
+
         # sub sub sort by cmc
         for column_key in card_types_dict.keys():
+            card_types_dict[column_key] = dict(sorted(card_types_dict[column_key].items()))
             for card_type in card_types_dict[column_key].keys():
                 card_types_dict[column_key][card_type] = self.sort_by_cmc(card_types_dict[column_key][card_type])
 
@@ -237,7 +241,7 @@ class trading_card_game_t:
             web_card_instance.append(this_filler_instance)
             for card_type in card_types_dict[column_glob].keys():
                 this_filler_instance = FILLER_INSTANCE.format(column_glob_base,
-                    row_glob_base, "{} ({})".format(card_type, len(card_types_dict[column_glob][card_type])))
+                    row_glob_base, "{} ({})".format(str(card_type).lower(), len(card_types_dict[column_glob][card_type])))
                 row_glob_base += CARD_HEIGHT
                 web_card_instance.append(this_filler_instance)
                 for card in card_types_dict[column_glob][card_type]:
