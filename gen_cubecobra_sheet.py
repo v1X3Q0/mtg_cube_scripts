@@ -126,6 +126,8 @@ BLUE_CARD=0x4947e4
 GREEN_CARD=0x18d043
 BLACK_CARD=0x4d4d4d
 WHITE_CARD = 0xf5f2c5
+PURPLE_CARD = 0xa912ea
+YELLOW_CARD = 0xebf306
 MULTICOLOR_CARD = 0xcbc243
 COLORLESS_CARD = 0xc3c3c3
 
@@ -139,50 +141,98 @@ def add_body_arg(div_type: str, div_arg: str):
 def close_head(div_type: str):
     return div_type.replace('<', "</")
 
-def get_image_uris_card(card: dict, card_in: dict):
-    if 'image_uris' in card.keys():
-        return card
-    else:
-        if ('mtgo_id' in card.keys()) and (int(card_in['MTGO ID']) != -1) and (int(card['mtgo_id']) == int(card_in['MTGO ID'])):
-            if "card_faces" in card.keys() and len(card["card_faces"]) > 1:
-                card_out = card["card_faces"][0]
-            else:
-                card_out = card
-            return card_out
-        # print(card_in['Set'], card['set'], card['collector_number'], card_in['Collector Number'])
-        if (card_in['Set'] == card['set']) and (card['collector_number'] == card_in['Collector Number']):
-            if "card_faces" in card.keys() and len(card["card_faces"]) > 1:
-                card_out = card["card_faces"][0]
-            else:
-                card_out = card
-            return card_out
-    return None
+class trading_card_game_t:
+    def __init__(self, carddb: dict):
+        self.carddb = carddb
+    def initialize_colorbase(self):
+        pass
+    def get_real_cardname(name: str):
+        pass
+    def color_retrieve(card: dict):
+        pass
+    def getimage_uri(card: dict):
+        pass
 
-def get_scryfall_card(carddb: dict, card_in: dict, preferred_lang='en'):
-    name_local = get_real_cardname(carddb, card_in['name'])
-    for card in carddb[name_local]:
-        if card['lang'] == preferred_lang:
-            card_uri = get_image_uris_card(card, card_in)
-            if card_uri != None:
-                return card_uri
-    return None
+    def create_webpage(self, cardlist_target: dict):
+        web_card_instance = []
+        color_base = {}
 
-def main(args):
-    carddb = populate_database(args.scryfall_list)
-    fieldnames, cardlist_target, _ = cardlistcsv(args.cardlist_csv)
-    web_card_instance = []
-    color_base = {'W': [CARD_WIDTH * 0, 0],
-                  'B': [CARD_WIDTH * 1, 0],
-                  'U': [CARD_WIDTH * 2, 0],
-                  'R': [CARD_WIDTH * 3, 0],
-                  'G': [CARD_WIDTH * 4, 0],
-                  'M': [CARD_WIDTH * 5, 0],
-                  'L': [CARD_WIDTH * 6, 0]}
-    for card in cardlist_target:
-        name_local = get_real_cardname(carddb, card['name'])
-        # print(name_local)
-        scryfall_card = get_scryfall_card(carddb, card)
-        image_url = scryfall_card['image_uris']['normal']
+        color_glob_index = 0
+        for color_glob in self.initialize_colorbase():
+            color_base[color_glob] = [CARD_WIDTH * color_glob_index, 0]
+            color_glob_index += 1
+
+        for card in cardlist_target:
+            name_local = get_real_cardname(self.carddb, card['name'])
+            # print(name_local)
+            color_local, color_index = self.color_retrieve(card)
+            image_uri = self.getimage_uri(card)
+            this_card_instance = CARD_INSTANCE.format(image_uri, color_base[color_index][0],
+                color_base[color_index][1], '#' + hex(color_local)[2:], name_local)
+            web_card_instance.append(this_card_instance)
+            color_base[color_index][1] += CARD_HEIGHT
+        max_cards = 0
+        for color_key in color_base.keys():
+            if color_base[color_key][1] > max_cards:
+                max_cards = color_base[color_key][1]
+        card_type = CARD_TYPE.format(CARD_WIDTH, CARD_HEIGHT)
+        container_width = CARD_WIDTH * len(color_base.items())
+        container_height = CARD_HEIGHT * max_cards
+        container_type = CONTAINER_TYPE.format(container_width, container_height)
+
+        webpage_str = ""
+        webpage_str += file_head + '\n'
+        webpage_str += html_head + '\n'
+        webpage_str += head_head + '\n'
+        webpage_str += style_head + '\n'
+        webpage_str += BACKGROUND_TYPE
+        webpage_str += container_type
+        webpage_str += card_type
+        webpage_str += CARD_IMAGE_TYPE
+        webpage_str += CARD_HOVER_TYPE
+        webpage_str += LABEL_TEXT_TYPE
+        webpage_str += close_head(style_head) + '\n'
+        webpage_str += close_head(head_head) + '\n'
+        webpage_str += body_head + '\n'
+        webpage_str += add_body_arg(div_head, "class=\"container\"")
+        for webcard in web_card_instance:
+            webpage_str += webcard
+        webpage_str += GLOBAL_PREVIEW
+        webpage_str += SAMPLE_PREVIEW_JS
+        webpage_str += close_head(div_head) + '\n'
+        webpage_str += close_head(body_head) + '\n'
+        webpage_str += close_head(html_head) + '\n'
+
+        if args.webpage != None:
+            with open(args.webpage, "w") as webpage_raw:
+                webpage_raw.write(webpage_str)
+        return
+
+
+class mtg_tcg_t(trading_card_game_t):
+    def initialize_colorbase(self):
+        MTG_COLOR_BASE = ['W', 'B', 'U', 'R', 'G', 'M', 'L']
+        return MTG_COLOR_BASE
+    def get_real_cardname(self, cardname: str):
+        database = self.db
+        if cardname in database.keys():
+            return cardname
+        else:
+            for cardkey in database.keys():
+                if ("{} // ".format(cardname) in cardkey) and (cardkey != "{} // {}".format(cardname, cardname)):
+                    return cardkey
+            # we haven't returned yet
+            for cardname_iter in database.keys():
+                for eachcard in database[cardname_iter]:
+                    if ("flavor_name" in eachcard.keys()) and (eachcard["flavor_name"] == cardname):
+                        return cardname_iter
+                    elif ("printed_name" in eachcard.keys()) and (eachcard["printed_name"] == cardname):
+                        return cardname_iter
+            else:
+                print(cardname)
+                exit()
+        return
+    def color_retrieve(self, card: dict):
         if len(card['Color']) > 1:
             color_local = MULTICOLOR_CARD
             color_index = 'M'
@@ -201,51 +251,93 @@ def main(args):
                 color_local = BLACK_CARD
             elif card['Color'] == 'G':
                 color_local = GREEN_CARD
-        this_card_instance = CARD_INSTANCE.format(image_url, color_base[color_index][0],
-            color_base[color_index][1], '#' + hex(color_local)[2:], card['name'])
-        web_card_instance.append(this_card_instance)
-        color_base[color_index][1] += CARD_HEIGHT
-    max_cards = 0
-    for color_key in color_base.keys():
-        if color_base[color_key][1] > max_cards:
-            max_cards = color_base[color_key][1]
-    card_type = CARD_TYPE.format(CARD_WIDTH, CARD_HEIGHT)
-    container_width = CARD_WIDTH * len(color_base.items())
-    container_height = CARD_HEIGHT * max_cards
-    container_type = CONTAINER_TYPE.format(container_width, container_height)
+        return color_local, color_index
+    def get_image_uris_card(self, card: dict, card_in: dict):
+        if 'image_uris' in card.keys():
+            return card
+        else:
+            if ('mtgo_id' in card.keys()) and (int(card_in['MTGO ID']) != -1) and (int(card['mtgo_id']) == int(card_in['MTGO ID'])):
+                if "card_faces" in card.keys() and len(card["card_faces"]) > 1:
+                    card_out = card["card_faces"][0]
+                else:
+                    card_out = card
+                return card_out
+            # print(card_in['Set'], card['set'], card['collector_number'], card_in['Collector Number'])
+            if (card_in['Set'] == card['set']) and (card['collector_number'] == card_in['Collector Number']):
+                if "card_faces" in card.keys() and len(card["card_faces"]) > 1:
+                    card_out = card["card_faces"][0]
+                else:
+                    card_out = card
+                return card_out
+        return None
+    def get_scryfall_card(self, card_in: dict, preferred_lang='en'):
+        carddb = self.carddb
+        name_local = get_real_cardname(carddb, card_in['name'])
+        for card in carddb[name_local]:
+            if card['lang'] == preferred_lang:
+                card_uri = self.get_image_uris_card(card, card_in)
+                if card_uri != None:
+                    return card_uri
+        return None
+    def mtg_getimage_uri(self, scryfall_card: dict):
+        return scryfall_card['image_uris']['normal']
 
-    webpage_str = ""
-    webpage_str += file_head + '\n'
-    webpage_str += html_head + '\n'
-    webpage_str += head_head + '\n'
-    webpage_str += style_head + '\n'
-    webpage_str += BACKGROUND_TYPE
-    webpage_str += container_type
-    webpage_str += card_type
-    webpage_str += CARD_IMAGE_TYPE
-    webpage_str += CARD_HOVER_TYPE
-    webpage_str += LABEL_TEXT_TYPE
-    webpage_str += close_head(style_head) + '\n'
-    webpage_str += close_head(head_head) + '\n'
-    webpage_str += body_head + '\n'
-    webpage_str += add_body_arg(div_head, "class=\"container\"")
-    for webcard in web_card_instance:
-        webpage_str += webcard
-    webpage_str += GLOBAL_PREVIEW
-    webpage_str += SAMPLE_PREVIEW_JS
-    webpage_str += close_head(div_head) + '\n'
-    webpage_str += close_head(body_head) + '\n'
-    webpage_str += close_head(html_head) + '\n'
+    def getimage_uri(self, card: dict):
+        scryfall_card = self.get_scryfall_card(card)
+        image_url = self.mtg_getimage_uri(scryfall_card)
+        return image_url
 
-    if args.webpage != None:
-        with open(args.webpage, "w") as webpage_raw:
-            webpage_raw.write(webpage_str)
-    return
+class op_tcg_t(trading_card_game_t):
+    def initialize_colorbase(self):
+        OP_COLOR_BASE = ['Y', 'G', 'U', 'B', 'R', 'P', 'M']
+        return OP_COLOR_BASE
+    def color_retrieve(card):
+        color_array = card['color']
+        if len(color_array.split('/')) > 1:
+            color_local = MULTICOLOR_CARD
+            color_index = 'M'
+        else:
+            if card['color'] == 'Green':
+                color_local = GREEN_CARD
+                color_index = 'G'
+            elif card['color'] == 'Yellow':
+                color_local = YELLOW_CARD
+                color_index = 'Y'
+            elif card['color'] == 'Purple':
+                color_local = PURPLE_CARD
+                color_index = 'P'
+            elif card['color'] == 'Blue':
+                color_local = BLUE_CARD
+                color_index = 'U'
+            elif card['color'] == 'Black':
+                color_local = BLACK_CARD
+                color_index = 'B'
+            elif card['color'] == 'Red':
+                color_local = RED_CARD
+                color_index = 'R'
+        return color_local, color_index
+    def get_real_cardname(name):
+        return name
+    def getimage_uri(card):
+        return card["image_url"]
+
+def main(args):
+    if args.tcg == 'mtg':
+        carddb = populate_database(args.scryfall_list)
+        fieldnames, cardlist_target, _ = cardlistcsv(args.cardlist_csv)
+        mtg_tcg = mtg_tcg_t(carddb)
+        mtg_tcg.create_webpage(cardlist_target)
+    elif args.tcg == 'op':
+        fieldnames_db, carddb, _ = cardlistcsv(args.scryfall_list)
+        fieldnames, cardlist_target, _ = cardlistcsv(args.cardlist_csv)
+        op_tcg = op_tcg_t(carddb)
+        op_tcg.create_webpage(cardlist_target)
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser("gen_cubecobra_sheet")
     argparser.add_argument("cardlist_csv", help="cardlist to use")
     argparser.add_argument("scryfall_list", help="scryfall list of cards")
+    argparser.add_argument('tcg', type=str, choices=['mtg', 'op'], help="choose a tcg, mtg or op.")
     argparser.add_argument("--webpage", help="webpage to host")
     args = argparser.parse_args()
     main(args)
