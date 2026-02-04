@@ -94,28 +94,42 @@ WHITE_CARD = 0xf5f2c5
 MULTICOLOR_CARD = 0xcbc243
 COLORLESS_CARD = 0xc3c3c3
 
-CARD_WIDTH = 100
-CARD_HEIGHT = 35
+CARD_WIDTH = 120
+CARD_HEIGHT = 25
 
 def add_body_arg(div_type: str, div_arg: str):
-    div_result = div_arg.replace('>', " {}{}".format(div_arg, ">"))
+    div_result = div_type.replace('>', " {}{}".format(div_arg, ">"))
     return div_result
 
 def close_head(div_type: str):
     return div_type.replace('<', "</")
 
-def get_scryfall_card(carddb: dict, card_in: dict):
+def get_image_uris_card(card: dict, card_in: dict):
+    if 'image_uris' in card.keys():
+        return card
+    else:
+        if ('mtgo_id' in card.keys()) and (int(card_in['MTGO ID']) != -1) and (int(card['mtgo_id']) == int(card_in['MTGO ID'])):
+            if "card_faces" in card.keys() and len(card["card_faces"]) > 1:
+                card_out = card["card_faces"][0]
+            else:
+                card_out = card
+            return card_out
+        # print(card_in['Set'], card['set'], card['collector_number'], card_in['Collector Number'])
+        if (card_in['Set'] == card['set']) and (card['collector_number'] == card_in['Collector Number']):
+            if "card_faces" in card.keys() and len(card["card_faces"]) > 1:
+                card_out = card["card_faces"][0]
+            else:
+                card_out = card
+            return card_out
+    return None
+
+def get_scryfall_card(carddb: dict, card_in: dict, preferred_lang='en'):
     name_local = get_real_cardname(carddb, card_in['name'])
     for card in carddb[name_local]:
-        if 'mtgo_id' in card.keys():
-            if int(card['mtgo_id']) == int(card_in['MTGO ID']):
-                if "card_faces" in card.keys() and len(card["card_faces"]) > 1:
-                    card_out = card["card_faces"][0]
-                else:
-                    card_out = card
-                return card_out
-        # else:
-        #     print("have card::")
+        if card['lang'] == preferred_lang:
+            card_uri = get_image_uris_card(card, card_in)
+            if card_uri != None:
+                return card_uri
     return None
 
 def main(args):
@@ -176,13 +190,16 @@ def main(args):
     webpage_str += CARD_IMAGE_TYPE
     webpage_str += CARD_HOVER_TYPE
     webpage_str += LABEL_TEXT_TYPE
-    webpage_str += close_head(style_head)
-    webpage_str += close_head(head_head)
+    webpage_str += close_head(style_head) + '\n'
+    webpage_str += close_head(head_head) + '\n'
     webpage_str += body_head + '\n'
     webpage_str += add_body_arg(div_head, "class=\"container\"")
     for webcard in web_card_instance:
         webpage_str += webcard
-    
+    webpage_str += close_head(div_head) + '\n'
+    webpage_str += close_head(body_head) + '\n'
+    webpage_str += close_head(html_head) + '\n'
+
     if args.webpage != None:
         with open(args.webpage, "w") as webpage_raw:
             webpage_raw.write(webpage_str)
