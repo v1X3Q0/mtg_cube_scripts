@@ -79,6 +79,13 @@ CARD_INSTANCE = """
 </div>
 """
 
+FILLER_INSTANCE = """
+<div class="card"
+        style="transform: translate({}px,{}px);">
+    <div class="label" style="color: white">{}</div>
+</div>
+"""
+
 SAMPLE_PREVIEW_JS = """
 <script>
 
@@ -146,38 +153,107 @@ class trading_card_game_t:
         self.carddb = carddb
     def initialize_colorbase(self):
         pass
-    def get_real_cardname(name: str):
+    def get_real_cardname(self, name: str):
         pass
-    def color_retrieve(card: dict):
+    def color_retrieve(self, card: dict):
         pass
-    def getimage_uri(card: dict):
+    def getimage_uri(self, card: dict):
         pass
+    def get_card_cost(self, card: dict):
+        pass
+    def get_card_type(self, card: dict):
+        pass
+    def rarity_variants(self):
+        pass
+    def rarity_retrieve(self, card: dict):
+        pass
+    def sort_by_cmc(self, cardlist_in: list):
+        cardlist = cardlist_in.copy()
+        new_cardlist = []
+        while len(cardlist) != 0:
+            first_card_index = 0
+            first_card = cardlist[first_card_index]
+            for card_index in range(0, len(cardlist)):
+                card = cardlist[card_index]
+                if self.get_card_cost(card) < self.get_card_cost(first_card):
+                    first_card = card
+                    first_card_index = card_index
+            new_cardlist.append(first_card)
+            cardlist.pop(first_card_index)
+        return new_cardlist
 
-    def create_webpage(self, cardlist_target: dict):
+    def create_webpage(self, cardlist_target: dict, prim_sort_grade: str):
         web_card_instance = []
-        color_base = {}
 
-        color_glob_index = 0
-        for color_glob in self.initialize_colorbase():
-            color_base[color_glob] = [CARD_WIDTH * color_glob_index, 0]
-            color_glob_index += 1
-
+        if prim_sort_grade == "color":
+            column_keys = self.initialize_colorbase()
+        elif prim_sort_grade == "rarity":
+            column_keys = self.rarity_variants()
+        
+        # subtype sort by type
+        # Then you have the card_types_dict
+        # {
+        #     L: {
+        #         Artifact: [
+        #             Sol Ring
+        #             Nyx Lotus
+        #             ]
+        #         Creature: [
+        #             Abundant Maw
+        #             ]
+        #     }
+        #     R: {
+        #         Sorcery: [
+        #             Comet Storm
+        #             ]
+        #     }
+        # }
+        card_types_dict = {}
+        for column_key in column_keys:
+            card_types_dict[column_key] = {}
         for card in cardlist_target:
-            name_local = self.get_real_cardname(card['name'])
-            # print(name_local)
-            color_local, color_index = self.color_retrieve(card)
-            image_uri = self.getimage_uri(card)
-            this_card_instance = CARD_INSTANCE.format(image_uri, color_base[color_index][0],
-                color_base[color_index][1], '#' + hex(color_local)[2:], name_local)
-            web_card_instance.append(this_card_instance)
-            color_base[color_index][1] += CARD_HEIGHT
-        max_cards = 0
-        for color_key in color_base.keys():
-            if color_base[color_key][1] > max_cards:
-                max_cards = color_base[color_key][1]
+            card_type = self.get_card_type(card)
+            if prim_sort_grade == "color":
+                _, column_key = self.color_retrieve(card)
+            elif prim_sort_grade == "rarity":
+                column_key = self.rarity_retrieve(card)
+            if card_type not in card_types_dict[column_key].keys():
+                card_types_dict[column_key][card_type] = []
+            card_types_dict[column_key][card_type].append(card)
+        
+        # sub sub sort by cmc
+        for column_key in card_types_dict.keys():
+            for card_type in card_types_dict[column_key].keys():
+                card_types_dict[column_key][card_type] = self.sort_by_cmc(card_types_dict[column_key][card_type])
+
+        max_height = 0
+        column_glob_base = 0
+        card_count = 0
+        for column_glob in card_types_dict.keys():
+            row_glob_base = 0
+            for card_type in card_types_dict[column_glob].keys():
+                this_filler_instance = FILLER_INSTANCE.format(column_glob_base,
+                    row_glob_base, "{} ({})".format(card_type, len(card_types_dict[column_glob][card_type])))
+                row_glob_base += CARD_HEIGHT
+                web_card_instance.append(this_filler_instance)
+                for card in card_types_dict[column_glob][card_type]:
+                    name_local = self.get_real_cardname(card['name'])
+                    color_local, color_index = self.color_retrieve(card)
+                    image_uri = self.getimage_uri(card)
+                    index_x = column_glob_base
+                    index_y = row_glob_base
+                    this_card_instance = CARD_INSTANCE.format(image_uri, index_x,
+                        index_y, '#' + hex(color_local)[2:], name_local)
+                    web_card_instance.append(this_card_instance)
+                    row_glob_base += CARD_HEIGHT
+                    if row_glob_base > max_height:
+                        max_height = row_glob_base
+                    card_count += 1
+            column_glob_base += CARD_WIDTH
+
         card_type = CARD_TYPE.format(CARD_WIDTH, CARD_HEIGHT)
-        container_width = CARD_WIDTH * len(color_base.items())
-        container_height = CARD_HEIGHT * max_cards
+        container_width = CARD_WIDTH * len(column_keys)
+        container_height = CARD_HEIGHT * max_height
         container_type = CONTAINER_TYPE.format(container_width, container_height)
 
         webpage_str = ""
@@ -213,8 +289,19 @@ class mtg_tcg_t(trading_card_game_t):
     def initialize_colorbase(self):
         MTG_COLOR_BASE = ['W', 'B', 'U', 'R', 'G', 'M', 'L']
         return MTG_COLOR_BASE
+    def get_card_cost(self, card):
+        return int(card['CMC'])
+    def get_card_type(self, card: dict):
+        local_type = card['Type']
+        local_type = local_type.replace('Legendary ', '')
+        return local_type.split(' ')[0]
+    def rarity_variants(self):
+        MTG_RARITY_VARIANTS = ['common', 'uncommon', 'rare', 'mythic']
+        return MTG_RARITY_VARIANTS
+    def rarity_retrieve(self, card: str):
+        return card['Rarity']
     def get_real_cardname(self, cardname: str):
-        database = self.db
+        database = self.carddb
         if cardname in database.keys():
             return cardname
         else:
@@ -291,6 +378,15 @@ class op_tcg_t(trading_card_game_t):
     def initialize_colorbase(self):
         OP_COLOR_BASE = ['Y', 'G', 'U', 'B', 'R', 'P', 'M']
         return OP_COLOR_BASE
+    def get_card_cost(self, card: dict):
+        return card['cost']
+    def get_card_type(self, card: dict):
+        return card['type']
+    def rarity_variants(self):
+        OP_RARITY_VARIANTS = ['C', 'R', 'UC', 'SR', 'L', 'SEC']
+        return OP_RARITY_VARIANTS
+    def rarity_retrieve(self, card: dict):
+        return card['rarity']
     def color_retrieve(self, card):
         color_array = card['color']
         if len(color_array.split('/')) > 1:
@@ -326,12 +422,12 @@ def main(args):
         carddb = populate_database(args.scryfall_list)
         fieldnames, cardlist_target, _ = cardlistcsv(args.cardlist_csv)
         mtg_tcg = mtg_tcg_t(carddb)
-        mtg_tcg.create_webpage(cardlist_target)
+        mtg_tcg.create_webpage(cardlist_target, args.sortby)
     elif args.tcg == 'op':
         fieldnames_db, carddb, _ = cardlistcsv(args.scryfall_list)
         fieldnames, cardlist_target, _ = cardlistcsv(args.cardlist_csv)
         op_tcg = op_tcg_t(carddb)
-        op_tcg.create_webpage(cardlist_target)
+        op_tcg.create_webpage(cardlist_target, args.sortby)
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser("gen_cubecobra_sheet")
@@ -339,5 +435,6 @@ if __name__ == "__main__":
     argparser.add_argument("scryfall_list", help="scryfall list of cards")
     argparser.add_argument('tcg', type=str, choices=['mtg', 'op'], help="choose a tcg, mtg or op.")
     argparser.add_argument("--webpage", help="webpage to host")
+    argparser.add_argument("--sortby", default="color", help="what to sort by, color or rarity")
     args = argparser.parse_args()
     main(args)
