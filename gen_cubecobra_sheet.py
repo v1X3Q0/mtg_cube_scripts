@@ -231,6 +231,10 @@ class trading_card_game_t:
         card_count = 0
         for column_glob in card_types_dict.keys():
             row_glob_base = 0
+            this_filler_instance = FILLER_INSTANCE.format(column_glob_base,
+                row_glob_base, "{}".format(column_glob))
+            row_glob_base += CARD_HEIGHT
+            web_card_instance.append(this_filler_instance)
             for card_type in card_types_dict[column_glob].keys():
                 this_filler_instance = FILLER_INSTANCE.format(column_glob_base,
                     row_glob_base, "{} ({})".format(card_type, len(card_types_dict[column_glob][card_type])))
@@ -253,7 +257,7 @@ class trading_card_game_t:
 
         card_type = CARD_TYPE.format(CARD_WIDTH, CARD_HEIGHT)
         container_width = CARD_WIDTH * len(column_keys)
-        container_height = CARD_HEIGHT * max_height
+        container_height = max_height
         container_type = CONTAINER_TYPE.format(container_width, container_height)
 
         webpage_str = ""
@@ -383,7 +387,7 @@ class op_tcg_t(trading_card_game_t):
     def get_card_type(self, card: dict):
         return card['type']
     def rarity_variants(self):
-        OP_RARITY_VARIANTS = ['C', 'R', 'UC', 'SR', 'L', 'SEC']
+        OP_RARITY_VARIANTS = ['C', 'UC', 'R', 'SR', 'L', 'SEC']
         return OP_RARITY_VARIANTS
     def rarity_retrieve(self, card: dict):
         return card['rarity']
