@@ -39,26 +39,21 @@ CARD_TYPE = """
 }}
 """
 
-CARD_IMAGE_TYPE = """
-/* preview image */
-.card img {
-    position: absolute;
-    width: 250px;
-    left: 160px;
-    top: 0;
-    opacity: 0;
-    pointer-events: none;
-    transform: scale(.9);
-    transition: .15s;
-    z-index: 10;
+CARD_HOVER_TYPE = """
+#preview{
+    position: fixed;
+    pointer-events:none;
+    z-index: 999999;
+    opacity:0;
+    transition: opacity .12s ease;
 }
 """
 
-CARD_HOVER_TYPE = """
-/* hover effect */
-.card:hover img {
-    opacity: 1;
-    transform: scale(1);
+CARD_IMAGE_TYPE = """
+#preview img{
+    width:260px;
+    border-radius:12px;
+    box-shadow:0 20px 40px rgba(0,0,0,.6);
 }
 """
 
@@ -69,21 +64,61 @@ LABEL_TEXT_TYPE = """
     font-size: small;
 }
 """
-# transform: translate({},{})
-# CARD_INSTANCE = """
-# <div class="card" style="left:{}px; top:{}px; background: {};">
-#     <div class="label">{}
-#     </div>
-#     <img src="{}">
-# </div>
-# """
+
+GLOBAL_PREVIEW = """
+<!-- GLOBAL preview -->
+<div id="preview">
+    <img id="preview-img">
+</div>
+"""
 
 CARD_INSTANCE = """
-<div class="card" style="transform: translate({}px,{}px); background: {};">
-    <div class="label">{}
-    </div>
-    <img src="{}">
+<div class="card" data-img="{}"
+        style="transform: translate({}px,{}px); background:{};">
+    <div class="label">{}</div>
 </div>
+"""
+
+SAMPLE_PREVIEW_JS = """
+<script>
+
+const preview = document.getElementById("preview");
+const img = document.getElementById("preview-img");
+
+document.querySelectorAll(".card").forEach(card => {
+
+    card.addEventListener("mouseenter", e=>{
+        img.src = card.dataset.img;
+        preview.style.opacity = 1;
+    });
+
+    card.addEventListener("mouseleave", ()=>{
+        preview.style.opacity = 0;
+    });
+
+    card.addEventListener("mousemove", e=>{
+
+        const pad = 20;
+        let x = e.clientX + pad;
+        let y = e.clientY - 140;
+
+        // prevent offscreen right
+        if(x + 260 > window.innerWidth){
+            x = e.clientX - 280;
+        }
+
+        // prevent offscreen bottom
+        if(y + 360 > window.innerHeight){
+            y = window.innerHeight - 380;
+        }
+
+        preview.style.left = x + "px";
+        preview.style.top = y + "px";
+    });
+
+});
+
+</script>
 """
 
 RED_CARD=0xef5c5c
@@ -166,8 +201,8 @@ def main(args):
                 color_local = BLACK_CARD
             elif card['Color'] == 'G':
                 color_local = GREEN_CARD
-        this_card_instance = CARD_INSTANCE.format(color_base[color_index][0],
-            color_base[color_index][1], '#' + hex(color_local)[2:], card['name'], image_url)
+        this_card_instance = CARD_INSTANCE.format(image_url, color_base[color_index][0],
+            color_base[color_index][1], '#' + hex(color_local)[2:], card['name'])
         web_card_instance.append(this_card_instance)
         color_base[color_index][1] += CARD_HEIGHT
     max_cards = 0
@@ -196,6 +231,8 @@ def main(args):
     webpage_str += add_body_arg(div_head, "class=\"container\"")
     for webcard in web_card_instance:
         webpage_str += webcard
+    webpage_str += GLOBAL_PREVIEW
+    webpage_str += SAMPLE_PREVIEW_JS
     webpage_str += close_head(div_head) + '\n'
     webpage_str += close_head(body_head) + '\n'
     webpage_str += close_head(html_head) + '\n'
