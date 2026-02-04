@@ -163,7 +163,7 @@ class trading_card_game_t:
             color_glob_index += 1
 
         for card in cardlist_target:
-            name_local = get_real_cardname(self.carddb, card['name'])
+            name_local = self.get_real_cardname(card['name'])
             # print(name_local)
             color_local, color_index = self.color_retrieve(card)
             image_uri = self.getimage_uri(card)
@@ -291,7 +291,7 @@ class op_tcg_t(trading_card_game_t):
     def initialize_colorbase(self):
         OP_COLOR_BASE = ['Y', 'G', 'U', 'B', 'R', 'P', 'M']
         return OP_COLOR_BASE
-    def color_retrieve(card):
+    def color_retrieve(self, card):
         color_array = card['color']
         if len(color_array.split('/')) > 1:
             color_local = MULTICOLOR_CARD
@@ -316,9 +316,9 @@ class op_tcg_t(trading_card_game_t):
                 color_local = RED_CARD
                 color_index = 'R'
         return color_local, color_index
-    def get_real_cardname(name):
+    def get_real_cardname(self, name):
         return name
-    def getimage_uri(card):
+    def getimage_uri(elf, card):
         return card["image_url"]
 
 def main(args):
