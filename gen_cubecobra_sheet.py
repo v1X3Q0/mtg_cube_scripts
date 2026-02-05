@@ -39,6 +39,18 @@ CARD_TYPE = """
 }}
 """
 
+# border-radius: 8px;
+# padding: 6px;
+RECTANGLE_TYPE = """
+.rect {{
+    position: absolute;
+    background: #2a2a2a;
+    color: white;
+    width: {}px;
+    height: {}px;
+}}
+"""
+
 CARD_HOVER_TYPE = """
 #preview{
     position: fixed;
@@ -75,15 +87,22 @@ GLOBAL_PREVIEW = """
 </div>
 """
 
+SEARCH_BAR_INSTANCE="""
+<input id="search"
+       type="text"
+       placeholder="Search cards..."
+       autocomplete="off">
+"""
+
 CARD_INSTANCE = """
-<div class="card" data-img="{}"
+<div class="card" data-name="{}" data-img="{}" data-color="{}" data-text="{}" data-type="{}"
         style="transform: translate({}px,{}px); background:{};">
     <div class="label">{}</div>
 </div>
 """
 
 FILLER_INSTANCE = """
-<div class="card"
+<div class="rect"
         style="transform: translate({}px,{}px);">
     <div class="label" style="color: white">{}</div>
 </div>
@@ -128,6 +147,43 @@ document.querySelectorAll(".card").forEach(card => {
 
 });
 
+const search = document.getElementById("search");
+const cards = document.querySelectorAll(".card");
+
+search.addEventListener("input", () => {
+
+    const term = search.value.toLowerCase();
+    let hastext = term.substring(0, 2);
+    let termfix = term.substring(2);
+
+    cards.forEach(card => {
+
+        let tagterm = "";
+        if(hastext === "t:"){
+            tagterm = card.dataset.type.toLowerCase();
+        }
+        else if(hastext === "c:"){
+            tagterm = card.dataset.color.toLowerCase();
+        }
+        else if(hastext === "o:"){
+            tagterm = card.dataset.text.toLowerCase();
+        }
+        else {
+            tagterm = card.dataset.name.toLowerCase();
+            termfix = term;
+        }
+
+        if(tagterm.includes(termfix)){
+            card.style.display = "block";
+        }
+        else{
+            card.style.display = "none";
+        }
+
+    });
+
+});
+
 </script>
 """
 
@@ -165,6 +221,10 @@ class trading_card_game_t:
     def get_card_cost(self, card: dict):
         pass
     def get_card_type(self, card: dict):
+        pass
+    def get_card_type_whole(self, card: dict):
+        pass
+    def get_card_text(self, card: dict):
         pass
     def rarity_variants(self):
         pass
@@ -250,8 +310,8 @@ class trading_card_game_t:
                     image_uri = self.getimage_uri(card)
                     index_x = column_glob_base
                     index_y = row_glob_base
-                    this_card_instance = CARD_INSTANCE.format(image_uri, index_x,
-                        index_y, '#' + hex(color_local)[2:], name_local)
+                    this_card_instance = CARD_INSTANCE.format(name_local, image_uri, color_index,
+                        self.get_card_text(card), self.get_card_type_whole(card), index_x, index_y, '#' + hex(color_local)[2:], name_local)
                     web_card_instance.append(this_card_instance)
                     row_glob_base += CARD_HEIGHT
                     if row_glob_base > max_height:
@@ -259,6 +319,7 @@ class trading_card_game_t:
                     card_count += 1
             column_glob_base += CARD_WIDTH
 
+        rectange_type = RECTANGLE_TYPE.format(CARD_WIDTH, CARD_HEIGHT)
         card_type = CARD_TYPE.format(CARD_WIDTH, CARD_HEIGHT)
         container_width = CARD_WIDTH * len(column_keys)
         container_height = max_height
@@ -272,12 +333,14 @@ class trading_card_game_t:
         webpage_str += BACKGROUND_TYPE
         webpage_str += container_type
         webpage_str += card_type
+        webpage_str += rectange_type
         webpage_str += CARD_IMAGE_TYPE
         webpage_str += CARD_HOVER_TYPE
         webpage_str += LABEL_TEXT_TYPE
         webpage_str += close_head(style_head) + '\n'
         webpage_str += close_head(head_head) + '\n'
         webpage_str += body_head + '\n'
+        webpage_str += SEARCH_BAR_INSTANCE
         webpage_str += add_body_arg(div_head, "class=\"container\"")
         for webcard in web_card_instance:
             webpage_str += webcard
@@ -303,11 +366,16 @@ class mtg_tcg_t(trading_card_game_t):
         local_type = card['Type']
         local_type = local_type.replace('Legendary ', '')
         return local_type.split(' ')[0]
+    def get_card_type_whole(self, card):
+        return card['Type']
     def rarity_variants(self):
         MTG_RARITY_VARIANTS = ['common', 'uncommon', 'rare', 'mythic']
         return MTG_RARITY_VARIANTS
     def rarity_retrieve(self, card: str):
         return card['Rarity']
+    def get_card_text(self, card):
+        scryfall_card = self.get_scryfall_card(card)
+        return self.get_block_card(card, scryfall_card, "oracle_text")
     def get_real_cardname(self, cardname: str):
         database = self.carddb
         if cardname in database.keys():
@@ -347,8 +415,8 @@ class mtg_tcg_t(trading_card_game_t):
             elif card['Color'] == 'G':
                 color_local = GREEN_CARD
         return color_local, color_index
-    def get_image_uris_card(self, card: dict, card_in: dict):
-        if 'image_uris' in card.keys():
+    def get_block_card(self, card: dict, card_in: dict, block='image_uris'):
+        if block in card.keys():
             return card
         else:
             if ('mtgo_id' in card.keys()) and (int(card_in['MTGO ID']) != -1) and (int(card['mtgo_id']) == int(card_in['MTGO ID'])):
@@ -365,6 +433,8 @@ class mtg_tcg_t(trading_card_game_t):
                     card_out = card
                 return card_out
         return None
+    def get_image_uris_card(self, card: dict, card_in: dict):
+        return self.get_block_card(card, card_in, "image_uris")
     def get_scryfall_card(self, card_in: dict, preferred_lang='en'):
         carddb = self.carddb
         name_local = get_real_cardname(carddb, card_in['name'])
@@ -387,9 +457,15 @@ class op_tcg_t(trading_card_game_t):
         OP_COLOR_BASE = ['Y', 'G', 'U', 'B', 'R', 'P', 'M']
         return OP_COLOR_BASE
     def get_card_cost(self, card: dict):
-        return card['cost']
+        if card['cost'] == '-':
+            return 0
+        return int(card['cost'])
+    def get_card_text(self, card):
+        return card['effect']
     def get_card_type(self, card: dict):
         return card['type']
+    def get_card_type_whole(self, card):
+        return card['card_type']
     def rarity_variants(self):
         OP_RARITY_VARIANTS = ['C', 'UC', 'R', 'SR', 'L', 'SEC']
         return OP_RARITY_VARIANTS
