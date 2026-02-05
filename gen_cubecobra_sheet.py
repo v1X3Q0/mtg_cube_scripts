@@ -95,7 +95,7 @@ SEARCH_BAR_INSTANCE="""
 """
 
 CARD_INSTANCE = """
-<div class="card" data-name="{}" data-img="{}" data-color="{}" data-text="{}" data-type="{}"
+<div class="card" data-name="{}" data-img="{}" data-color="{}" data-text="{}" data-type="{}" data-set="{}"
         style="transform: translate({}px,{}px); background:{};">
     <div class="label">{}</div>
 </div>
@@ -168,6 +168,9 @@ search.addEventListener("input", () => {
         else if(hastext === "o:"){
             tagterm = card.dataset.text.toLowerCase();
         }
+        else if(hastext === "s:"){
+            tagterm = card.dataset.set.toLowerCase();
+        }
         else {
             tagterm = card.dataset.name.toLowerCase();
             termfix = term;
@@ -229,6 +232,8 @@ class trading_card_game_t:
     def rarity_variants(self):
         pass
     def rarity_retrieve(self, card: dict):
+        pass
+    def get_set(self, card: dict):
         pass
     def sort_by_cmc(self, cardlist_in: list):
         cardlist = cardlist_in.copy()
@@ -311,7 +316,7 @@ class trading_card_game_t:
                     index_x = column_glob_base
                     index_y = row_glob_base
                     this_card_instance = CARD_INSTANCE.format(name_local, image_uri, color_index,
-                        self.get_card_text(card), self.get_card_type_whole(card), index_x, index_y, '#' + hex(color_local)[2:], name_local)
+                        self.get_card_text(card), self.get_card_type_whole(card), self.get_set(card), index_x, index_y, '#' + hex(color_local)[2:], name_local)
                     web_card_instance.append(this_card_instance)
                     row_glob_base += CARD_HEIGHT
                     if row_glob_base > max_height:
@@ -376,6 +381,8 @@ class mtg_tcg_t(trading_card_game_t):
     def get_card_text(self, card):
         scryfall_card = self.get_scryfall_card(card)
         return self.get_block_card(card, scryfall_card, "oracle_text")
+    def get_set(self, card):
+        return card['Set']
     def get_real_cardname(self, cardname: str):
         database = self.carddb
         if cardname in database.keys():
@@ -471,6 +478,8 @@ class op_tcg_t(trading_card_game_t):
         return OP_RARITY_VARIANTS
     def rarity_retrieve(self, card: dict):
         return card['rarity']
+    def get_set(self, card):
+        return card["id"].split('-')[0]
     def color_retrieve(self, card):
         color_array = card['color']
         if len(color_array.split('/')) > 1:
