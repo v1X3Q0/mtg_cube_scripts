@@ -5,7 +5,7 @@ import os
 import re
 from balancing import parse_type
 
-SETNAME_REGEX=r'([a-zA-Z0-9]{3})([0-9]{4})?-(base|preb)\.csv'
+SETNAME_REGEX=r'([a-zA-Z0-9]+)?-(base|preb)\.csv'
 PURCHASEDNAME_REGEX=r'([a-zA-Z0-9]{3})([0-9]{4})?-purchased\.csv'
 
 def set_maybe(cardlist: list):
@@ -71,7 +71,7 @@ def set_newcardlist(file_path: str, main_setname: str, setlist: list, fieldnames
             if fsetpre == None:
                 return None, None, None, None
             cursetname = fsetpre.groups()[0]
-            if fsetpre.groups()[2] == 'preb':
+            if fsetpre.groups()[1] == 'preb':
                 cursetname += 'd'
         # test for cursetname
         if (cursetname not in setlist) or (cursetname == main_setname):

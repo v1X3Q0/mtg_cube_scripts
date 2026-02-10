@@ -95,7 +95,7 @@ SEARCH_BAR_INSTANCE="""
 """
 
 CARD_INSTANCE = """
-<div class="card" data-name="{}" data-img="{}" data-color="{}" data-text="{}" data-type="{}" data-set="{}"
+<div class="card" data-name="{}" data-img="{}" data-color="{}" data-text="{}" data-type="{}" data-set="{}" data-rarity="{}"
         style="transform: translate({}px,{}px); background:{};">
     <div class="label">{}</div>
 </div>
@@ -170,6 +170,9 @@ search.addEventListener("input", () => {
         }
         else if(hastext === "s:"){
             tagterm = card.dataset.set.toLowerCase();
+        }
+        else if(hastext === "r:"){
+            tagterm = card.dataset.rarity.toLowerCase();
         }
         else {
             tagterm = card.dataset.name.toLowerCase();
@@ -316,7 +319,7 @@ class trading_card_game_t:
                     index_x = column_glob_base
                     index_y = row_glob_base
                     this_card_instance = CARD_INSTANCE.format(name_local, image_uri, color_index,
-                        self.get_card_text(card), self.get_card_type_whole(card), self.get_set(card), index_x, index_y, '#' + hex(color_local)[2:], name_local)
+                        self.get_card_text(card), self.get_card_type_whole(card), self.get_set(card), self.rarity_retrieve(card), index_x, index_y, '#' + hex(color_local)[2:], name_local)
                     web_card_instance.append(this_card_instance)
                     row_glob_base += CARD_HEIGHT
                     if row_glob_base > max_height:
@@ -380,7 +383,7 @@ class mtg_tcg_t(trading_card_game_t):
         return card['Rarity']
     def get_card_text(self, card):
         scryfall_card = self.get_scryfall_card(card)
-        return self.get_block_card(card, scryfall_card, "oracle_text")
+        return self.get_block_card(scryfall_card, card, "oracle_text")
     def get_set(self, card):
         return card['Set']
     def get_real_cardname(self, cardname: str):
@@ -423,6 +426,16 @@ class mtg_tcg_t(trading_card_game_t):
                 color_local = GREEN_CARD
         return color_local, color_index
     def get_block_card(self, card: dict, card_in: dict, block='image_uris'):
+        """
+        Docstring for get_block_card
+        
+        :param self: Description
+        :param card: scryfall card in
+        :type card: dict
+        :param card_in: cube cobra card in
+        :type card_in: dict
+        :param block: which key we want from the primary face
+        """
         if block in card.keys():
             return card
         else:

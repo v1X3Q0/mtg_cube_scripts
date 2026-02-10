@@ -30,6 +30,29 @@ def get_real_cardname(database: dict, cardname: str):
             exit()
     return
 
+def get_block_card(card: dict, block='image_uris'):
+    """
+    Docstring for get_block_card
+    
+    :param self: Description
+    :param card: scryfall card in
+    :type card: dict
+    :param card_in: cube cobra card in
+    :type card_in: dict
+    :param block: which key we want from the primary face
+    """
+    if block in card.keys():
+        return card
+    else:
+        if ('mtgo_id' in card.keys()):
+            if "card_faces" in card.keys() and len(card["card_faces"]) > 1:
+                card_out = card["card_faces"][0]
+            else:
+                card_out = card
+            return card_out
+    return None
+
+
 def search_database(database:list, cardname:str, setnamelist_in:list):
     for card in database:
         if ((card['name'] == cardname) or ("{} // ".format(cardname) in card['name'])) and (card['set'] in setnamelist_in):

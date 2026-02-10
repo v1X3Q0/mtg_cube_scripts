@@ -1,6 +1,7 @@
 import argparse
 import random
 import json
+import os
 import csv
 from balancing import balancing_main
 
@@ -106,7 +107,7 @@ def main(args):
         cardlist_unbell = []
         # take all maybeboard cards out
         for card_index in range(0, len(cardlist)):
-            if cardlist[card_index]['maybeboard'] == "False":
+            if str(cardlist[card_index]['maybeboard']).lower() == "false":
                 cardlist_real.append(cardlist[card_index])
             else:
                 cardlist_unbell.append(cardlist[card_index])
@@ -118,7 +119,9 @@ def main(args):
         if useddict == -1:
             return useddict
         useddict = useddict + cardlist_unbell
-        filename = "{}sort.{}".format(cube_count, args.cardlist_csv)
+        fnamebase = os.path.basename(args.cardlist_csv)
+        filename = "{}sort.{}".format(cube_count, fnamebase)
+        filename = os.path.join(os.path.dirname(args.cardlist_csv), filename)
 
         write_cardlistcsv(filename, useddict, fieldnames)
         print("wrote {}".format(filename))
