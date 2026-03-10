@@ -1,6 +1,6 @@
 import argparse
-from cardrand import cardlistcsv
-from dup_sets import populate_database, get_real_cardname
+
+from util_cardlist import cardlistcsv, get_real_cardname, populate_database
 
 file_head = "<!DOCTYPE html>"
 html_head = "<html>"
@@ -538,7 +538,7 @@ def main(args):
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser("gen_cubecobra_sheet")
     argparser.add_argument("cardlist_csv", help="cardlist to use")
-    argparser.add_argument("scryfall_list", help="scryfall list of cards")
+    argparser.add_argument("scryfall_dict", help="dictionary format of scryfall list of cards")
     argparser.add_argument('tcg', type=str, choices=['mtg', 'op'], help="choose a tcg, mtg or op.")
     argparser.add_argument("--webpage", help="webpage to host")
     argparser.add_argument("--sortby", default="color", help="what to sort by, color or rarity")

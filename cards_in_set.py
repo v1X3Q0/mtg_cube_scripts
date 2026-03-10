@@ -2,8 +2,7 @@ import argparse
 import os
 import json
 from txt_to_cc import FIELDNAME_RAW, txt_to_cc
-from setprim import write_cardlistcsv
-from dup_sets import populate_database
+from util_cardlist import populate_database, write_cardlistcsv
 
 def main(args):
     cardlist_out = []

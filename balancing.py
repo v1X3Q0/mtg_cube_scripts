@@ -1,15 +1,17 @@
 import scrython
 import random
 
+from util_cardlist import get_real_cardname
+
 SPELL_TYPES = ["Creature", "Artifact", "Instant", "Sorcery", "Enchantment", "OTHER"]
 UNCOLOR_TYPES = ["Land", "OTHER"]
 
 BALANCING_MAP = {
-    180: {"COLOR": 24, "LANDS": 15},
-    235: {"COLOR": 30, "LANDS": 20},
-    270: {"COLOR": 37, "LANDS": 25},
+    180: {"COLOR": 24, "LANDS": 15}, # 45
+    235: {"COLOR": 30, "LANDS": 20}, #
+    270: {"COLOR": 37, "LANDS": 25}, # 60 colorless/multicolor
     315: {"COLOR": 44, "LANDS": 30},
-    360: {"COLOR": 50, "LANDS": 35}
+    360: {"COLOR": 50, "LANDS": 35} # 75
     }
 
 def parse_type(type_in: str):
@@ -190,8 +192,7 @@ def typed_rare_pull(this_typed_color_list: list, cardlist: list, ratio_type_cap:
             # color_dict.pop(temp_typelist[rand_card])
     return cardlist
 
-def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list, owcolor: int, owland: int):
-    cardlist_scrython=[]
+def balancing_main(database: dict, capacity: int, cardlist: list, cardlist_maybe: list, owcolor: int, owland: int):
     color_dict = {'W':[], 'B':[], 'U':[], 'G':[], 'R':[]}
     uncolor_list = []
     land_list = []
@@ -209,8 +210,15 @@ def balancing_main(capacity: int, cardlist: list, cardlist_maybe: list, owcolor:
     for card in cardlist:
         type_spacesplit = card['Type'].split(' ')
         # pull monochromatic cards
-        if (len(card['Color']) == 1) and (card['Type'] != 'Land'):
-            color_dict[card['Color']].append(card)
+
+        cardname_temp = get_real_cardname(database, card['name'])
+        color_identity_real = ''.join(database[cardname_temp][0]['color_identity'])
+
+        if (len(color_identity_real) == 1) and (card['Type'] != 'Land'):
+            cardname_temp = get_real_cardname(database, card['name'])
+            card['Color'] = color_identity_real
+            color_dict[color_identity_real].append(card)
+            # color_dict[card['Color']].append(card)
         # pull multicolors and colorless
         elif 'Land' not in type_spacesplit:
             uncolor_list.append(card)

@@ -3,47 +3,10 @@ import csv
 from pathlib import Path
 import os
 import re
-from balancing import parse_type
+from util_cardlist import cardlistcsv, set_main, set_maybe, write_cardlistcsv
 
 SETNAME_REGEX=r'([a-zA-Z0-9]+)?-(base|preb)\.csv'
 PURCHASEDNAME_REGEX=r'([a-zA-Z0-9]{3})([0-9]{4})?-purchased\.csv'
-
-def set_maybe(cardlist: list):
-    for card_index in range(0, len(cardlist)):
-        cardlist[card_index]['maybeboard'] = True
-    return cardlist
-
-def set_main(cardlist: list):
-    for card_index in range(0, len(cardlist)):
-        cardlist[card_index]['maybeboard'] = False
-    return cardlist
-
-def cardlistcsv(cardlist_csv: str):
-    """
-    Docstring for cardlistcsv
-    
-    :param cardlist_csv: Description
-    :type cardlist_csv: str
-    Returns
-    fieldnames list, dictreader, num of cards
-    """
-    with open(cardlist_csv, mode='r', newline='', encoding='utf-8') as csvfile:
-        # Create a DictReader object
-        dict_reader = csv.DictReader(csvfile)
-        fieldnames = dict_reader.fieldnames
-        # Iterate through each row (as a dictionary) and print specific columns
-        dict_reader_l = list(dict_reader)
-        return fieldnames, dict_reader_l, len(dict_reader_l)
-
-def write_cardlistcsv(useddict: list, filename: str, fieldnames: list):
-    with open(filename, mode='w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-        # Write the header row
-        writer.writeheader()
-
-        # Write the data rows
-        writer.writerows(useddict)
 
 def update_cardnamelist(cardlist_in: list, cardnamelist: list, cardlistnet: list):
     for card in cardlist_in:
@@ -148,7 +111,7 @@ def main(args):
     setlist.sort()
     print("maineboard \"{}\": have sets {} on the maybeboard".format(main_setname, setlist))
     if args.outfile != None:
-        write_cardlistcsv(cardlistnet, args.outfile, fieldnames)
+        write_cardlistcsv(args.outfile, cardlistnet, fieldnames)
     else:
         print("have {} cards".format(len(cardlistnet)))
     return

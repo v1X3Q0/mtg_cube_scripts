@@ -4,55 +4,7 @@ import json
 import os
 import csv
 from balancing import balancing_main
-
-def cardlistdict(cardliststr: str):
-    thisdict = []
-    eachquantsplit = cardliststr.split(',')
-    totalcards = 0
-    for eachkeypair in eachquantsplit:
-        keyval = eachkeypair.split(':')
-        localkey = keyval[0]
-        localval = int(keyval[1])
-        totalcards += localval
-        thisdict.append((localkey, localval))
-        # thisdict[localkey] = localval
-    return thisdict, totalcards
-
-def write_cardlistcsv(filename: str, useddict: list, fieldnames):
-        # return
-        with open(filename, mode='w', newline='') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-            # Write the header row
-            writer.writeheader()
-
-            # Write the data rows
-            writer.writerows(useddict)
-
-
-def ret_card(cardlist: list, cardno: int):
-    counter = 0
-    for costlist in cardlist:
-        if cardno < (costlist[1] + counter):
-            return costlist[0], (cardno - counter)
-        counter += costlist[1]
-    return None
-
-def ret_card_csv(cardlist: list, cardno: int):
-    return cardlist[cardno]
-
-def cardlistcsv(cardlist_csv: str):
-    """
-    Returns:
-    fieldnames, dictreader list, len(dictreader list)    
-    """
-    with open(cardlist_csv, mode='r', newline='', encoding='utf-8') as csvfile:
-        # Create a DictReader object
-        dict_reader = csv.DictReader(csvfile)
-        fieldnames = dict_reader.fieldnames
-        # Iterate through each row (as a dictionary) and print specific columns
-        dict_reader_l = list(dict_reader)
-        return fieldnames, dict_reader_l, len(dict_reader_l)
+from util_cardlist import cardlistcsv, cardlistdict, populate_database, ret_card, write_cardlistcsv
 
 def main(args):
     if args.cardlist_counts != None:
@@ -115,7 +67,12 @@ def main(args):
         for card_index in range(0, len(cardlist_real)):
             cardlist_real[card_index]['maybeboard'] = True
         print("beginning with {} cards, will add {} later".format(len(cardlist_real), len(cardlist_unbell)))
-        useddict, cardlist_unbell = balancing_main(cube_count, cardlist_real, cardlist_unbell, args.owcolor, args.owland)
+        if args.database_in == None:
+            print("need database in!")
+            exit(-1)
+        print("loading database {}...".format(args.database_in))
+        database = populate_database(args.database_in)
+        useddict, cardlist_unbell = balancing_main(database, cube_count, cardlist_real, cardlist_unbell, args.owcolor, args.owland)
         if useddict == -1:
             return useddict
         useddict = useddict + cardlist_unbell
@@ -149,5 +106,6 @@ if __name__ == "__main__":
     argparser.add_argument("--owcolor", type=int, help="overwrite the color base count")
     argparser.add_argument("--owland", type=int, help="overwrite the land base count")
     argparser.add_argument("--rand_color_print", action='store_true', help='display the random color balance')
+    argparser.add_argument("--database_in", help="scryfall database to import")
     args = argparser.parse_args()
     main(args)

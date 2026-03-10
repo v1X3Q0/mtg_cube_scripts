@@ -3,7 +3,8 @@ import os
 import argparse
 from pathlib import Path
 
-from setprim import cardlistcsv, write_cardlistcsv
+from util_cardlist import cardlistcsv, write_cardlistcsv
+
 
 # 1 And That's When Somebody Makes Fun of Their Friend's Dream!!!! [EB-02] EB02-030
 # 1 Emporio.Ivankov (065) [OP12] OP12-065

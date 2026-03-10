@@ -1,6 +1,7 @@
 import argparse
-from dup_sets import populate_database, get_real_cardname, get_block_card
-from setprim import write_cardlistcsv
+import re
+
+from util_cardlist import get_real_cardname, populate_database, write_cardlistcsv
 
 # name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom
 
@@ -67,6 +68,11 @@ def main(args):
         for line in txtlines:
             cardname = line.replace("\n", '')
             if cardname != '':
+                cardnamere = re.match(r'([0-9]+ )?(.+)', cardname)
+                if cardnamere == None:
+                    print("Error: Could not find {}".format(cardname))
+                    exit(-1)
+                cardname = cardnamere.groups()[1]
                 cardlist_in.append(cardname)
     if cardlist_in == []:
         return
