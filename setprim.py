@@ -15,6 +15,19 @@ def update_cardnamelist(cardlist_in: list, cardnamelist: list, cardlistnet: list
             cardlistnet.append(card)
     return cardnamelist, cardlistnet
 
+def adjust_board(cardlistnet: list) -> list:
+    for card in cardlistnet:
+        if (card['maybeboard'] == True) or (card['maybeboard'] == "TRUE"):
+            card["board"] = "maybeboard"
+        else:
+            card["board"] = "mainboard"
+    return cardlistnet
+
+def adjust_voucher(cardlistnet: list) -> list:
+    for card in cardlistnet:
+        card['Voucher'] = False
+    return cardlistnet
+
 def set_newcardlist(file_path: str, main_setname: str, setlist: list, fieldnames, cardnamelist: list, cardlistnet: list, setmFlag: bool, purchasedFlag: bool):
     purchased_set = False
     # Check if the entry is actually a file (and not a subdirectory)
@@ -110,6 +123,14 @@ def main(args):
 
     setlist.sort()
     print("maineboard \"{}\": have sets {} on the maybeboard".format(main_setname, setlist))
+    if args.adjust_board == True:
+        cardlistnet = adjust_board(cardlistnet)
+        if "board" not in fieldnames:
+            fieldnames.append("board")
+    if args.adjust_voucher == True:
+        cardlistnet = adjust_voucher(cardlistnet)
+        if "Voucher" not in fieldnames:
+            fieldnames.append("Voucher")
     if args.outfile != None:
         write_cardlistcsv(args.outfile, cardlistnet, fieldnames)
     else:
@@ -124,5 +145,7 @@ if __name__ == "__main__":
     argparser.add_argument("--purchased", action="store_true", help="will look for purchased cards," \
     " those will go on the maybe and unpurchased will go on main")
     argparser.add_argument("maybe", nargs='*', type=str, help="make these your maybeboard")
+    argparser.add_argument("--adjust_board", action="store_true", help="force board into the csv")
+    argparser.add_argument("--adjust_voucher", action="store_true", help="force voucher into the csv")
     args = argparser.parse_args()
     main(args)

@@ -74,7 +74,7 @@ def ret_card(cardlist: list, cardno: int):
 def ret_card_csv(cardlist: list, cardno: int):
     return cardlist[cardno]
 
-def cardlistcsv(cardlist_csv: str):
+def cardlistcsv(cardlist_csv: str) -> tuple[list, list, int]:
     """
     Docstring for cardlistcsv
     

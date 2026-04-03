@@ -138,6 +138,7 @@ def typed_rare_pull(this_typed_color_list: list, cardlist: list, ratio_type_cap:
             if (card['Rarity'] == 'rare') or (card['Rarity'] == 'mythic'):
                 card_index_net = index_of_card_in_list(card, cardlist)
                 cardlist[card_index_net]['maybeboard'] = False
+                cardlist[card_index_net]['board'] = 'mainboard'
                 this_typed_color_list.pop(card_index)
                 ratio_type_cap -= 1
                 continue
@@ -168,6 +169,7 @@ def typed_rare_pull(this_typed_color_list: list, cardlist: list, ratio_type_cap:
                     rand_card_index = random.randint(0, len(this_typed_color_list) - 1)
                 card_index_net = index_of_card_in_list(this_typed_color_list[rand_card_index], cardlist)
                 cardlist[card_index_net]['maybeboard'] = False
+                cardlist[card_index_net]['board'] = 'mainboard'
                 # we need to remove all instances of this card
                 rand_card = this_typed_color_list[rand_card_index]
                 while index_of_card_in_list(rand_card, this_typed_color_list) != None:
@@ -188,6 +190,7 @@ def typed_rare_pull(this_typed_color_list: list, cardlist: list, ratio_type_cap:
             # print("random stuff")
             rare_card_index = index_of_card_in_list(temp_typelist[rand_card], cardlist)
             cardlist[rare_card_index]['maybeboard'] = False
+            cardlist[rare_card_index]['board'] = 'mainboard'
             # print(cardlist[rare_card_index])
             # color_dict.pop(temp_typelist[rand_card])
     return cardlist
@@ -253,6 +256,7 @@ def balancing_main(database: dict, capacity: int, cardlist: list, cardlist_maybe
             for card in this_color_list:
                 colored_card_index = index_of_card_in_list(card, cardlist)
                 cardlist[colored_card_index]['maybeboard'] = False
+                cardlist[colored_card_index]['board'] = 'mainboard'
 
     # return
     # get lands
@@ -278,6 +282,7 @@ def balancing_main(database: dict, capacity: int, cardlist: list, cardlist_maybe
         for card in land_list:
             colored_card_index = index_of_card_in_list(card, cardlist)
             cardlist[colored_card_index]['maybeboard'] = False
+            cardlist[colored_card_index]['board'] = 'mainboard'
     # we are gonna set this to be the capacity, if its less we can comment it out
     # or overwrite, or just add in more lands ourselves to take the burden off the
     # uncolor
@@ -306,5 +311,6 @@ def balancing_main(database: dict, capacity: int, cardlist: list, cardlist_maybe
         for card in uncolor_list:
             colored_card_index = index_of_card_in_list(card, cardlist)
             cardlist[colored_card_index]['maybeboard'] = False
+            cardlist[colored_card_index]['board'] = 'mainboard'
 
     return cardlist, cardlist_maybe

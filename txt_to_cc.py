@@ -5,7 +5,7 @@ from util_cardlist import get_real_cardname, populate_database, write_cardlistcs
 
 # name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom
 
-FIELDNAME_RAW = "name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom"
+FIELDNAME_RAW = "name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom,board"
 
 def txt_to_cc(cardlist_dict: dict, cardlist_in: list, set_suggestion=None):
     cardlist_out = []
@@ -20,8 +20,15 @@ def txt_to_cc(cardlist_dict: dict, cardlist_in: list, set_suggestion=None):
                 if scrycard['set'] == set_suggestion:
                     if scrycard_base == None:
                         scrycard_base = scrycard
-                    elif int(scrycard["collector_number"]) < int(scrycard_base["collector_number"]):
-                        scrycard_base = scrycard
+                    else:
+                        try:
+                            if int(scrycard["collector_number"]) < int(scrycard_base["collector_number"]):
+                                scrycard_base = scrycard
+                        except:
+                            # print(scrycard["collector_number"], scrycard_base["collector_number"])
+                            # print(scrycard['name'], scrycard_base['name'])
+                            # we are finding super extra cards, just don't count them.
+                            scrycard = scrycard
             if scrycard_base == None:
                 print("card {} not in set {}".format(cardname_real, set_suggestion))
         else:
@@ -44,6 +51,7 @@ def txt_to_cc(cardlist_dict: dict, cardlist_in: list, set_suggestion=None):
         else:
             carddict_local['Finish'] = "Foil"
         carddict_local['maybeboard'] = False
+        carddict_local['board'] = 'mainboard'
         carddict_local['image URL'] = ""
         carddict_local['image Back URL'] = ""
         carddict_local['tags'] = ""
@@ -78,7 +86,7 @@ def main(args):
         return
     cardlist_dict = populate_database(args.dictlist)
     cardlist_out = txt_to_cc(cardlist_dict, cardlist_in)
-    write_cardlistcsv(cardlist_out, "{}.csv".format(args.txt), FIELDNAME_RAW.split(','))
+    write_cardlistcsv("{}.csv".format(args.txt), cardlist_out, FIELDNAME_RAW.split(','))
     return
 
 if __name__ == "__main__":

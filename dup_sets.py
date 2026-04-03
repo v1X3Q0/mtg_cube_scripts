@@ -61,8 +61,10 @@ def main(args):
             for card in card_set_list:
                 if args.force_main == True:
                     card['maybeboard'] = False
+                    card['board'] = 'mainboard'
                 else:
                     card['maybeboard'] = True
+                    card['board'] = 'maybeboard'
             card_set_list = prevsetlist + card_set_list
         write_cardlistcsv(filename, card_set_list, fieldnames)
         print("wrote to file {}".format(filename))
