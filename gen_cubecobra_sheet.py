@@ -525,12 +525,12 @@ class op_tcg_t(trading_card_game_t):
 
 def main(args):
     if args.tcg == 'mtg':
-        carddb = populate_database(args.scryfall_list)
+        carddb = populate_database(args.scryfall_dict)
         fieldnames, cardlist_target, _ = cardlistcsv(args.cardlist_csv)
         mtg_tcg = mtg_tcg_t(carddb)
         mtg_tcg.create_webpage(cardlist_target, args.sortby)
     elif args.tcg == 'op':
-        fieldnames_db, carddb, _ = cardlistcsv(args.scryfall_list)
+        fieldnames_db, carddb, _ = cardlistcsv(args.scryfall_dict)
         fieldnames, cardlist_target, _ = cardlistcsv(args.cardlist_csv)
         op_tcg = op_tcg_t(carddb)
         op_tcg.create_webpage(cardlist_target, args.sortby)
